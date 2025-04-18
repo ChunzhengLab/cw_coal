@@ -1,0 +1,39 @@
+# === Build & compiler artifacts ===
+build/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+*.o
+*.so
+*.a
+*.d
+*.lo
+
+# === ROOT dictionary outputs ===
+G__*.cxx
+G__*.h
+
+# === ROOT data files ===
+*.root
+# Do not ignore ROOT files in the data directory
+!data/*.root
+!data/**/*.root
+
+# === Editor junk ===
+*.swp
+*~
+*.bak
+.DS_Store
+.vscode/
+.idea/
+
+# === Log and debug files ===
+*.log
+*.out
+*.err
+core.*
+valgrind*.txt
+
+# === Test output ===
+test_results/
