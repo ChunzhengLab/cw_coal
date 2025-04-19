@@ -75,6 +75,8 @@ private:
 
 class Parton : public Particle {
 public:
+  /// Default constructor needed for ROOT I/O
+  Parton() : Particle() {}
   Parton(double x, double y, double z,
          double px, double py, double pz, double baryonNumber)
     : Particle(x, y, z, px, py, pz, baryonNumber) {}
@@ -84,19 +86,21 @@ public:
 
   // 可选：从模型或hist生成随机Parton
   static Parton* Random(TRandom3* rng = nullptr); // Modified declaration
-  static Parton* RandomFromHists(const char* filename = "../../data/dist_parton_afART.root",
+  static Parton* RandomFromHists(const char* filename,
                                   TRandom3* rng = nullptr); // Modified declaration
 
 private:
   bool fUsed{false};
 
-  ClassDef(Parton, 1)
+  ClassDef(Parton, 2)
 };
 
 // ================= Hadron ==================
 
 class Hadron : public Particle {
 public:
+  /// Default constructor needed for ROOT I/O
+  Hadron() : Particle(), fFormationDistance(0.0) {}
   Hadron(double x, double y, double z,
          double px, double py, double pz, double baryonNumber, double formationDistance)
     : Particle(x, y, z, px, py, pz, baryonNumber), fFormationDistance(formationDistance) {}
@@ -111,7 +115,7 @@ private:
   double fFormationDistance{0.0};
   std::vector<unsigned int> fConstituentIDs; // Unique IDs of partons forming this hadron
 
-  ClassDef(Hadron, 2)
+  ClassDef(Hadron, 3)
 };
 
 #endif // PARTICLE_H

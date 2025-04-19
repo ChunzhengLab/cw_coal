@@ -1,6 +1,7 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include "TLatex.h"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -16,7 +17,6 @@
 #include "../include/core/Particle.h"
 
 void visualize_event(const char* filename = "test_KDTreeGlobal.root", int eventIndex = 0) {
-
 
     gSystem->Load("libcw_coal.dylib");
 
@@ -230,46 +230,35 @@ void visualize_event(const char* filename = "test_KDTreeGlobal.root", int eventI
     legend->Draw();
     gPad->Update();
 
-    // --- Canvas 3: Hadron formation distance distribution ---
-    TCanvas* cDist = new TCanvas("cDist", "Hadron Formation Distance Distribution", 800, 600);
-    // Collect formation distances
-    std::vector<double> dists;
-    dists.reserve(hadrons.size());
+    // --- Canvas 4: Global Ratios ---
+    TCanvas* cRatio = new TCanvas("cRatio", "Global Ratios", 600, 400);
+    // Count hadron types
+    int countB = 0, countAB = 0, countM = 0;
     for (auto* h : hadrons) {
-        dists.push_back(h->GetFormationDistance());
+        double bn = h->GetBaryonNumber();
+        if      (bn > 0)  ++countB;
+        else if (bn < 0)  ++countAB;
+        else              ++countM;
     }
-    auto [dminIt, dmaxIt] = std::minmax_element(dists.begin(), dists.end());
-    double dmin = *dminIt, dmax = *dmaxIt;
-    int binsDist = 100;
-    TH1D* hDist_b  = new TH1D("hDist_b",  "Formation Distance;Distance;Counts", binsDist, 0, dmax);
-    TH1D* hDist_ab = new TH1D("hDist_ab", ";Distance;Counts",            binsDist, 0, dmax);
-    TH1D* hDist_m  = new TH1D("hDist_m",  ";Distance;Counts",            binsDist, 0, dmax);
-    TH1D* hDist_all = new TH1D("hDist_all", "All Hadrons Distance;Distance;Counts", binsDist, 0, dmax);
-    // Fill histograms by type
-    for (auto* h : hadrons) {
-        double d = h->GetFormationDistance();
-        hDist_all->Fill(d);
-        if      (h->GetBaryonNumber() > 0)  hDist_b->Fill(d);
-        else if (h->GetBaryonNumber() < 0)  hDist_ab->Fill(d);
-        else                                hDist_m->Fill(d);
+    // Calculate ratios
+    double ratioBM = (countM > 0 ? double(countB) / countM : 0);
+    double ratioBAB = (countAB > 0 ? double(countB) / countAB : 0);
+    // Create a 2-bin histogram: bin1=B/M, bin2=B/#bar{B}
+    TH1D* hRatio = new TH1D("hRatio","Global Ratios;Type;Value",2,0.5,2.5);
+    hRatio->GetXaxis()->SetBinLabel(1,"B/M");
+    hRatio->GetXaxis()->SetBinLabel(2,"B/#bar{B}");
+    hRatio->SetBinContent(1, ratioBM);
+    hRatio->SetBinContent(2, ratioBAB);
+    hRatio->SetLineColor(kBlack);
+    hRatio->SetFillColorAlpha(kGray, 0.5);
+    hRatio->Draw("B");
+    // Draw bar values
+    for (int ib=1; ib<=2; ++ib) {
+        double x = hRatio->GetBinCenter(ib);
+        double y = hRatio->GetBinContent(ib);
+        TLatex txt;
+        txt.SetTextAlign(22);
+        txt.DrawLatex(x, y + 0.03*y, Form("%.2f", y));
     }
-    // Style and draw
-    // Style and draw total and category distances
-    hDist_all->SetLineColor(kBlack);
-    hDist_all->SetLineWidth(2);
-    hDist_all->Draw();
-    hDist_b->SetLineColor(colB);
-    hDist_b->Draw("SAME");
-    hDist_ab->SetLineColor(colAB);
-    hDist_ab->Draw("SAME");
-    hDist_m->SetLineColor(colM);
-    hDist_m->Draw("SAME");
-    // Legend for distance
-    TLegend* legDist = new TLegend(0.6, 0.7, 0.9, 0.9);
-    legDist->AddEntry(hDist_all, "All Hadrons", "l");
-    legDist->AddEntry(hDist_b,  "Hadron (B>0)", "l");
-    legDist->AddEntry(hDist_ab, "Hadron (B<0)", "l");
-    legDist->AddEntry(hDist_m,  "Meson (B=0)",   "l");
-    legDist->Draw();
-    gPad->Update();
+    cRatio->Update();
 }

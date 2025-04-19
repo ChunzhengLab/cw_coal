@@ -17,8 +17,8 @@ G__*.h
 # === ROOT data files ===
 *.root
 # Do not ignore ROOT files in the data directory
-!data/*.root
-!data/**/*.root
+!refdata/*.root
+!refdata/**/*.root
 
 # === Editor junk ===
 *.swp

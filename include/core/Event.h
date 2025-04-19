@@ -25,6 +25,8 @@ public:
 
   int GetMultiplicity() const { return static_cast<int>(fHadrons.size()); }
 
+  virtual void Clear(Option_t* opt = "") override;
+
 private:
   static unsigned int sNextID;
   unsigned int fEvtID{0};
@@ -32,7 +34,7 @@ private:
   std::vector<Hadron*> fHadrons;
   double fReactionPlane{0.0};
 
-  ClassDef(Event, 3)
+  ClassDef(Event, 4)
 };
 
 #endif // EVENT_H

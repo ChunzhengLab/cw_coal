@@ -2,20 +2,29 @@
 #include "io/EventWriter.h"
 #include "Combiners.h"
 #include "core/PhysicsConstants.h"
-
+#include "ana/AnalyzerQA.h"
 #include <iostream>
 #include <string>
 #include <memory>
 #include <chrono>
 #include <algorithm>
 #include <vector>
+#include <cstdlib> 
+#include <string>
+
+// Path to parton histogram file: CLI override > env var > installed DATA_INSTALL_DIR
+static const std::string defaultHistPath = std::string(DATA_INSTALL_PREFIX) + "/" + std::string(DATA_INSTALL_DATADIR) + "/cw_coal/refdata" + "/dist_parton_afART.root";
+static const char* kPartonHistFile =
+    std::getenv("CW_COAL_PARTON_HIST") ?
+    std::getenv("CW_COAL_PARTON_HIST") :
+    defaultHistPath.c_str();
 
 std::vector<Parton*> GenerateRandomPartons(size_t initialCount, int sumBaryonNumber) {
   std::vector<Parton*> partons;
   int baryonSum3 = 0;  // 以三分之一单位整数累加
 
   for (size_t i = 0; i < initialCount; ++i) {
-    Parton* p = Parton::Random();
+    Parton* p = Parton::RandomFromHists(kPartonHistFile);
     int bn3 = std::round(p->GetBaryonNumber() * 3); // ±1
     baryonSum3 += bn3;
     partons.push_back(p);
@@ -25,7 +34,7 @@ std::vector<Parton*> GenerateRandomPartons(size_t initialCount, int sumBaryonNum
 
   // 自动补充直到达到目标总和
   while (baryonSum3 != targetSum3) {
-    Parton* p = Parton::Random();
+    Parton* p = Parton::RandomFromHists(kPartonHistFile);
     int bn3 = std::round(p->GetBaryonNumber() * 3); // ±1
 
     // 只接受能让当前和靠近目标的粒子
@@ -113,6 +122,9 @@ int main() {
 
     // Run each test: each writer is locally created per test
     for (auto& tc : tests) {
+        // Initialize QA analyzer for this combiner
+        AnalyzerQA qa;
+        qa.Init();
         EventWriter writer(std::string("test_") + tc.label + ".root");
         for (int ie = 0; ie < nEvents; ++ie) {
             // Generate fresh partons for each event
@@ -124,9 +136,23 @@ int main() {
                       << " of " << nEvents << std::endl;
             auto basePartons = GenerateRandomPartons(nParts, 0);
             RunTest(tc.label, tc.combiner, basePartons, writer);
+            // Feed the produced event into QA histograms
+            // Note: RunTest creates a local Event 'event'; replicate its filling here
+            {
+                // Clone local event structure for QA (after RunTest)
+                Event event;
+                for (auto* p : basePartons) event.AddParton(p);
+                auto hadrons = tc.combiner.Combine(ClonePartons(basePartons));
+                for (auto* h : hadrons) event.AddHadron(h);
+                qa.Process(event);
+                // clean up hadrons from temporary combine
+                for (auto* h : hadrons) delete h;
+            }
             // Clean up partons
             for (auto* p : basePartons) delete p;
         }
+        // After all events, write out QA histograms
+        qa.Finish(std::string("qa_") + tc.label + ".root");
     }
 
     return 0;
