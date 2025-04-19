@@ -16,16 +16,16 @@ public:
   void AddHadron(Hadron* h) { fHadrons.push_back(h); }
 
   void SetReactionPlane(double psi) { fReactionPlane = psi; }
-  void SetUniqueID(unsigned int id) { fEvtID = id; }
+  void SetUID(unsigned int id) { fEvtID = id; }
 
   const std::vector<Parton*>& GetPartons() const { return fPartons; }
   const std::vector<Hadron*>& GetHadrons() const { return fHadrons; }
   double GetReactionPlane() const { return fReactionPlane; }
-  unsigned int GetUniqueID() const { return fEvtID; }
+  unsigned int GetUID() const { return fEvtID; }
 
   int GetMultiplicity() const { return static_cast<int>(fHadrons.size()); }
 
-  virtual void Clear(Option_t* opt = "") override;
+  void Reset(Option_t* opt = "");
 
 private:
   static unsigned int sNextID;

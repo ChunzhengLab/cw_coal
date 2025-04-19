@@ -59,7 +59,7 @@ public:
   void SetBaryonNumber(double b) { fBaryonNumber = b; }
   
   unsigned int UniqueID() const { return fUniqueID; }
-  void SetUniqueID(unsigned int uid) { fUniqueID = uid; }
+  void SetUID(unsigned int uid) { fUniqueID = uid; }
 
 private:
   double fPx{0}, fPy{0}, fPz{0};

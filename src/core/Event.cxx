@@ -1,8 +1,8 @@
-#include "core/Event.h"
+#include "Event.h"
 
 unsigned int Event::sNextID = 1;
 
-void Event::Clear(Option_t* opt) {
+void Event::Reset(Option_t* opt) {
   // delete dynamically allocated Parton objects
   for (auto p : fPartons) {
     delete p;

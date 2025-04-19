@@ -72,7 +72,7 @@ bool EventReaderAMPT::NextEvent(Event& out) {
   if (fCurrent >= fNentries) return false;
   fTree->GetEntry(fCurrent);
   fNparton = fEventBuf[1];
-  out.SetUniqueID(static_cast<unsigned int>(fCurrent++)); // 用序号当 ID
+  out.SetUID(static_cast<unsigned int>(fCurrent++)); // 用序号当 ID
   // 清除上一次的数据
   out.Clear();
   // 填充所有 parton
