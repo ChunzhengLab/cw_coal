@@ -11,7 +11,7 @@ private:
 };
 
 std::vector<Hadron*> BruteForceGreedy::Combine(const std::vector<Parton*>& partons) {
-  std::vector<Hadron*> result;
+  std::vector<Hadron*> hadrons;
   PartonNeighborSearcherBrute searcher(partons);
 
   for (auto* a : partons) {
@@ -28,7 +28,7 @@ std::vector<Hadron*> BruteForceGreedy::Combine(const std::vector<Parton*>& parto
           a->Px() + b->Px(), a->Py() + b->Py(), a->Pz() + b->Pz(),
           sum, a->DistanceTo(*b)
         );
-        result.push_back(h);
+        hadrons.push_back(h);
         a->MarkUsed(); b->MarkUsed();
         break;
       }
@@ -44,7 +44,7 @@ std::vector<Hadron*> BruteForceGreedy::Combine(const std::vector<Parton*>& parto
           std::round(baryonSum),
           a->DistanceTo(*b) + a->DistanceTo(*c) + b->DistanceTo(*c)
         );
-        result.push_back(h);
+        hadrons.push_back(h);
         a->MarkUsed(); b->MarkUsed(); c->MarkUsed();
         goto next_parton;
       }
@@ -52,7 +52,10 @@ std::vector<Hadron*> BruteForceGreedy::Combine(const std::vector<Parton*>& parto
   next_parton:;
   }
 
-  return result;
+  auto afterburned = Afterburner(partons);
+  hadrons.insert(hadrons.end(), afterburned.begin(), afterburned.end());
+
+  return hadrons;
 }
 
 PartonNeighborSearcherBrute::PartonNeighborSearcherBrute(const std::vector<Parton*>& partons)

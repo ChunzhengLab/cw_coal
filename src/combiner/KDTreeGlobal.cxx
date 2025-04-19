@@ -101,6 +101,6 @@ std::vector<Hadron*> KDTreeGlobal::Combine(const std::vector<Parton*>& partons) 
 
   auto afterburned = Afterburner(partons);
   hadrons.insert(hadrons.end(), afterburned.begin(), afterburned.end());
-  
+
   return hadrons;
 }

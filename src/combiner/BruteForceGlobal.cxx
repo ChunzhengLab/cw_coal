@@ -19,7 +19,7 @@ struct Candidate {
 std::vector<Hadron*> BruteForceGlobal::Combine(const std::vector<Parton*>& partons) {
     std::vector<Candidate> candidates;
     std::unordered_set<size_t> used;
-    std::vector<Hadron*> output;
+    std::vector<Hadron*> hadrons;
 
     for (size_t i = 0; i < partons.size(); ++i) {
         if (partons[i]->IsUsed()) continue;
@@ -72,7 +72,7 @@ std::vector<Hadron*> BruteForceGlobal::Combine(const std::vector<Parton*>& parto
             h->AddConstituentID(a->UniqueID());
             h->AddConstituentID(b->UniqueID());
             h->AddConstituentID(c->UniqueID());
-            output.push_back(h);
+            hadrons.push_back(h);
             used.insert(candi.idxA); used.insert(candi.idxB); used.insert(candi.idxC);
             a->MarkUsed(); b->MarkUsed(); c->MarkUsed();
         } else {
@@ -89,11 +89,11 @@ std::vector<Hadron*> BruteForceGlobal::Combine(const std::vector<Parton*>& parto
             Hadron* h = new Hadron(x, y, z, px, py, pz, 0, formation);
             h->AddConstituentID(a->UniqueID());
             h->AddConstituentID(b->UniqueID());
-            output.push_back(h);
+            hadrons.push_back(h);
             used.insert(candi.idxA); used.insert(candi.idxB);
             a->MarkUsed(); b->MarkUsed();
         }
     }
 
-    return output;
+    return hadrons;
 }

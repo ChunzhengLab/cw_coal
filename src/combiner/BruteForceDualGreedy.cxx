@@ -4,7 +4,7 @@
 
 
 std::vector<Hadron*> BruteForceDualGreedy::Combine(const std::vector<Parton*>& partons) {
-  std::vector<Hadron*> result;
+  std::vector<Hadron*> hadrons;
 
   for (auto* a : partons) {
     if (a->IsUsed()) continue;
@@ -51,7 +51,7 @@ std::vector<Hadron*> BruteForceDualGreedy::Combine(const std::vector<Parton*>& p
       Hadron* h = new Hadron(x, y, z, px, py, pz, 0, closestOppDist);
       h->AddConstituentID(a->UniqueID());
       h->AddConstituentID(closestOpp->UniqueID());
-      result.push_back(h);
+      hadrons.push_back(h);
       a->MarkUsed(); closestOpp->MarkUsed();
     } else if (closestSame1 && closestSame2) {
       double x = (a->X() + closestSame1->X() + closestSame2->X()) / 3;
@@ -65,10 +65,13 @@ std::vector<Hadron*> BruteForceDualGreedy::Combine(const std::vector<Parton*>& p
       h->AddConstituentID(a->UniqueID());
       h->AddConstituentID(closestSame1->UniqueID());
       h->AddConstituentID(closestSame2->UniqueID());
-      result.push_back(h);
+      hadrons.push_back(h);
       a->MarkUsed(); closestSame1->MarkUsed(); closestSame2->MarkUsed();
     }
   }
 
-  return result;
+  auto afterburned = Afterburner(partons);
+  hadrons.insert(hadrons.end(), afterburned.begin(), afterburned.end());
+
+  return hadrons;
 }

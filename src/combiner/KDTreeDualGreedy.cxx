@@ -73,5 +73,8 @@ std::vector<Hadron*> KDTreeDualGreedy::Combine(const std::vector<Parton*>& parto
         }
     }
 
+    auto afterburned = Afterburner(partons);
+    hadrons.insert(hadrons.end(), afterburned.begin(), afterburned.end());
+
     return hadrons;
 }
