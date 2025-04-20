@@ -5,6 +5,7 @@
 #include "core/Event.h"
 
 class TH1D;
+class TProfile;
 
 /// \brief Quality-assurance analyzer for hadron distributions.
 /// Separately fills histograms for baryons, anti-baryons, and mesons.
@@ -27,6 +28,11 @@ public:
     void Finish(const std::string& outFileName);
 
 private:
+
+    TH1D* hMult_a;
+    TH1D* hMult_ab;
+    TH1D* hMult_m;
+
     // Histograms for pT distributions
     TH1D* hPt_b;
     TH1D* hPt_ab;
@@ -46,6 +52,11 @@ private:
     TH1D* hPhiP_b;
     TH1D* hPhiP_ab;
     TH1D* hPhiP_m;
+
+    TProfile* v2_pt_b;
+    TProfile* v2_pt_ab;
+    TProfile* v2_pt_m;
+
 };
 
 #endif // ANALYZERQA_H

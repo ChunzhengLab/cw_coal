@@ -10,10 +10,11 @@ AnalyzerQA::AnalyzerQA()
     hPhiP_b(nullptr), hPhiP_ab(nullptr), hPhiP_m(nullptr) {}
 
 AnalyzerQA::~AnalyzerQA() {
-    delete hPt_b;   delete hPt_ab;   delete hPt_m;
-    delete hEta_b;  delete hEta_ab;  delete hEta_m;
-    delete hPhiM_b; delete hPhiM_ab; delete hPhiM_m;
-    delete hPhiP_b; delete hPhiP_ab; delete hPhiP_m;
+    // Histograms and profiles are owned by ROOT; do not delete here to avoid double-free.
+    // delete hPt_b;   delete hPt_ab;   delete hPt_m;
+    // delete hEta_b;  delete hEta_ab;  delete hEta_m;
+    // delete hPhiM_b; delete hPhiM_ab; delete hPhiM_m;
+    // delete hPhiP_b; delete hPhiP_ab; delete hPhiP_m;
 }
 
 void AnalyzerQA::Init() {
@@ -39,9 +40,8 @@ void AnalyzerQA::Process(const Event& evt) {
     for (auto* h : evt.GetHadrons()) {
         double px = h->Px(), py = h->Py(), pz = h->Pz();
         double x  = h->X(),  y  = h->Y();
-        double pt = std::sqrt(px*px + py*py);
-        double eta = (pt > 0 ? 0.5*std::log((std::sqrt(pt*pt + pz*pz) + pz)
-                            / (std::sqrt(pt*pt + pz*pz) - pz)) : 0);
+        double pt = std::hypot(px, py);
+        double eta = std::asinh(pz/pt);
         double phi_m = std::atan2(py, px); if (phi_m < 0) phi_m += 2*M_PI;
         double phi_p = std::atan2(y, x);   if (phi_p < 0) phi_p += 2*M_PI;
 

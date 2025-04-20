@@ -94,7 +94,7 @@ set(SOURCES
 # ------------------------------------------------------------------------------
 add_library(cw_coal SHARED ${SOURCES})
 target_compile_definitions(cw_coal
-  PUBLIC DATA_INSTALL_DIR="${CMAKE_INSTALL_DATADIR}/cw_coal/refdata"
+  PUBLIC DATA_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/cw_coal/refdata"
 )
 target_include_directories(cw_coal PUBLIC
   ${PROJECT_INCLUDE_DIR}
@@ -116,7 +116,7 @@ install(TARGETS cw_coal
 add_executable(cwcoal src/app/cwcoal.cpp)
 target_link_libraries(cwcoal PRIVATE cw_coal ${ROOT_LIBRARIES})
 target_compile_definitions(cwcoal
-  PRIVATE DATA_INSTALL_DIR="${CMAKE_INSTALL_DATADIR}/cw_coal/refdata"
+  PRIVATE DATA_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/cw_coal/refdata"
 )
 install(TARGETS cwcoal RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
@@ -128,8 +128,7 @@ function(add_cw_test name source)
   target_link_libraries(${name} PRIVATE cw_coal ${ROOT_LIBRARIES})
   target_compile_definitions(${name}
     PRIVATE
-      DATA_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
-      DATA_INSTALL_DATADIR="${CMAKE_INSTALL_DATADIR}"
+      DATA_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/cw_coal/refdata"
   )
   set_target_properties(${name} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test

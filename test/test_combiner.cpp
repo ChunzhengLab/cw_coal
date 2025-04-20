@@ -14,7 +14,7 @@
 #include <string>
 
 // Path to parton histogram file: CLI override > env var > installed DATA_INSTALL_DIR
-static const std::string defaultHistPath = std::string(DATA_INSTALL_PREFIX) + "/" + std::string(DATA_INSTALL_DATADIR) + "/cw_coal/refdata" + "/dist_parton_afART.root";
+static const std::string defaultHistPath = std::string(DATA_INSTALL_DIR) + "/dist_parton_afART.root";
 static const char* kPartonHistFile =
     std::getenv("CW_COAL_PARTON_HIST") ?
     std::getenv("CW_COAL_PARTON_HIST") :
