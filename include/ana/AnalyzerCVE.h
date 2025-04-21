@@ -36,6 +36,9 @@ private:
     TH1D* hCdPhiP[6]; // -> position space
     TH1D* hCdPhiM[6]; // -> momentum space
 
+    TH1D* hSdPhiP[6]; // -> position space
+    TH1D* hSdPhiM[6]; // -> momentum space
+
     TProfile* deltaP[6]; // delta = #LTcos(#Delta#phi)#GT (a !=b)
     TProfile* gammaP[6]; // gamma = #LTcos(#phi_{1}+#phi_{2})#GT (a !=b)
 

@@ -48,64 +48,74 @@ void AnalyzerCVE::Init() {
         const std::string lab = comboLabels[i];
         // Δφ histograms
         hCdPhiP[i] = new TH1D(("hCdPhiP_" + lab).c_str(),
-                              ("Δφ Position " + lab).c_str(),
+                              ("#Delta#phi Position " + lab).c_str(),
                               64, -0.5*TMath::Pi(), 1.5*TMath::Pi());
-        hCdPhiP[i]->SetXTitle("Δφ");
-        hCdPhiP[i]->SetYTitle("Entries");
+        hCdPhiP[i]->SetXTitle("#Delta#phi");
+        hCdPhiP[i]->SetYTitle("Counts");
 
         hCdPhiM[i] = new TH1D(("hCdPhiM_" + lab).c_str(),
-                              ("Δφ Momentum " + lab).c_str(),
+                              ("#Delta#phi Momentum " + lab).c_str(),
                               64, -0.5*TMath::Pi(), 1.5*TMath::Pi());
-        hCdPhiM[i]->SetXTitle("Δφ");
-        hCdPhiM[i]->SetYTitle("Entries");
+        hCdPhiM[i]->SetXTitle("#Delta#phi");
+        hCdPhiM[i]->SetYTitle("Counts");
 
-        // Δφ profiles
+        // sumφ
+        hSdPhiP[i] = new TH1D(("hSdPhiP_" + lab).c_str(),
+                              ("Sum#phi Position " + lab).c_str(),
+                              64, -0.5*TMath::Pi(), 1.5*TMath::Pi());
+        hSdPhiP[i]->SetXTitle("Sum#phi");
+        hSdPhiP[i]->SetYTitle("Counts");
+
+        hSdPhiM[i] = new TH1D(("hSdPhiM_" + lab).c_str(),
+                              ("Sum#phi Momentum " + lab).c_str(),
+                              64, -0.5*TMath::Pi(), 1.5*TMath::Pi());
+        hSdPhiM[i]->SetXTitle("Sum#phi");
+        hSdPhiM[i]->SetYTitle("Counts");
+
+
+        // delta and gamma
         deltaP[i] = new TProfile(("pDeltaP_" + lab).c_str(),
                                  ("#LTcos(#Delta#phi)#GT Position " + lab).c_str(),
-                                 64, -0.5*TMath::Pi(), 1.5*TMath::Pi());
-        deltaP[i]->SetXTitle("Δφ");
+                                 1, 0, 1);
         deltaP[i]->SetYTitle("#LTcos(#Delta#phi)#GT");
 
         gammaP[i] = new TProfile(("pGammaP_" + lab).c_str(),
                                  ("#LTcos(#phi_{1}+#phi_{2})#GT Position " + lab).c_str(),
-                                 64, -2*TMath::Pi(), 2*TMath::Pi());
-        gammaP[i]->SetXTitle("φ₁+φ₂");
+                                 1, 0, 1);
         gammaP[i]->SetYTitle("#LTcos(#phi_{1}+#phi_{2})#GT");
 
         deltaS[i] = new TProfile(("pDeltaM_" + lab).c_str(),
                                  ("#LTcos(#Delta#phi)#GT Momentum " + lab).c_str(),
-                                 64, -0.5*TMath::Pi(), 1.5*TMath::Pi());
-        deltaS[i]->SetXTitle("Δφ");
+                                 1, 0, 1);
         deltaS[i]->SetYTitle("#LTcos(#Delta#phi)#GT");
 
         gammaS[i] = new TProfile(("pGammaM_" + lab).c_str(),
                                  ("#LTcos(#phi_{1}+#phi_{2})#GT Momentum " + lab).c_str(),
-                                 64, -2*TMath::Pi(), 2*TMath::Pi());
-        gammaS[i]->SetXTitle("φ₁+φ₂");
+                                 1, 0, 1);
         gammaS[i]->SetYTitle("#LTcos(#phi_{1}+#phi_{2})#GT");
 
         // vs N_tracks profiles
         deltaMNtrk[i] = new TProfile(("pDeltaPNtrk_" + lab).c_str(),
                                      ("#LTcos(#Delta#phi)#GT vs N_{tracks} Position " + lab).c_str(),
-                                     100, 0, 10000);
+                                     150, 0, 15000);
         deltaMNtrk[i]->SetXTitle("N_{tracks}");
         deltaMNtrk[i]->SetYTitle("#LTcos(#Delta#phi)#GT");
 
         gammaMNtrk[i] = new TProfile(("pGammaPNtrk_" + lab).c_str(),
                                      ("#LTcos(#phi_{1}+#phi_{2})#GT vs N_{tracks} Position " + lab).c_str(),
-                                     100, 0, 10000);
+                                     150, 0, 15000);
         gammaMNtrk[i]->SetXTitle("N_{tracks}");
         gammaMNtrk[i]->SetYTitle("#LTcos(#phi_{1}+#phi_{2})#GT");
 
         deltaSNtrk[i] = new TProfile(("pDeltaMNtrk_" + lab).c_str(),
                                      ("#LTcos(#Delta#phi)#GT vs N_{tracks} Momentum " + lab).c_str(),
-                                     100, 0, 10000);
+                                     150, 0, 15000);
         deltaSNtrk[i]->SetXTitle("N_{tracks}");
         deltaSNtrk[i]->SetYTitle("#LTcos(#Delta#phi)#GT");
 
         gammaSNtrk[i] = new TProfile(("pGammaMNtrk_" + lab).c_str(),
                                      ("#LTcos(#phi_{1}+#phi_{2})#GT vs N_{tracks} Momentum " + lab).c_str(),
-                                     100, 0, 10000);
+                                     150, 0, 15000);
         gammaSNtrk[i]->SetXTitle("N_{tracks}");
         gammaSNtrk[i]->SetYTitle("#LTcos(#phi_{1}+#phi_{2})#GT");
     }
@@ -119,7 +129,7 @@ void AnalyzerCVE::Process(const Event& evt) {
         for (size_t j = i + 1; j < hadrons.size(); ++j) {
             Hadron* h1 = hadrons[i];
             Hadron* h2 = hadrons[j];
-            auto fold = [](double d) {
+            auto range = [](double d) {
                 d = TVector2::Phi_mpi_pi(d);
                 if (d < -0.5*TMath::Pi()) d += 2*TMath::Pi();
                 return d;
@@ -139,31 +149,33 @@ void AnalyzerCVE::Process(const Event& evt) {
             // compute azimuthal angles in position and momentum space
             double phi_p1   = TMath::ATan2(h1->Y(),  h1->X());
             double phi_p2   = TMath::ATan2(h2->Y(),  h2->X());
-            double dphi_p   = TVector2::Phi_mpi_pi(phi_p1 - phi_p2);
+            double dphi_p   = phi_p1 - phi_p2;
             double sumphi_p = phi_p1 + phi_p2;
-            double c_dphi_p = TMath::Cos(dphi_p);
-            double c_sum_p  = TMath::Cos(sumphi_p);
+            double delta_p = TMath::Cos(dphi_p);
+            double gamma_p  = TMath::Cos(sumphi_p);
 
             double phi_m1   = TMath::ATan2(h1->Py(), h1->Px());
             double phi_m2   = TMath::ATan2(h2->Py(), h2->Px());
-            double dphi_m   = TVector2::Phi_mpi_pi(phi_m1 - phi_m2);
+            double dphi_m   = phi_m1 - phi_m2;
             double sumphi_m = phi_m1 + phi_m2;
-            double c_dphi_m = TMath::Cos(dphi_m);
-            double c_sum_m  = TMath::Cos(sumphi_m);
+            double delta_m = TMath::Cos(dphi_m);
+            double gamma_m  = TMath::Cos(sumphi_m);
 
             // Position-space
-            hCdPhiP[idx]->Fill(fold(dphi_p));
-            deltaP[idx]->Fill(dphi_p, c_dphi_p);
-            gammaP[idx]->Fill(sumphi_p, c_sum_p);
-            deltaMNtrk[idx]->Fill(nTrk, c_dphi_p);
-            gammaMNtrk[idx]->Fill(nTrk, c_sum_p);
+            hCdPhiP[idx]->Fill(range(dphi_p));
+            hSdPhiP[idx]->Fill(range(sumphi_p));
+            deltaP[idx]->Fill(0.5, delta_p);
+            gammaP[idx]->Fill(0.5, gamma_p);
+            deltaMNtrk[idx]->Fill(nTrk, delta_p);
+            gammaMNtrk[idx]->Fill(nTrk, gamma_p);
 
             // Momentum-space
-            hCdPhiM[idx]->Fill(fold(dphi_m));
-            deltaS[idx]->Fill(dphi_m, c_dphi_m);
-            gammaS[idx]->Fill(sumphi_m, c_sum_m);
-            deltaSNtrk[idx]->Fill(nTrk, c_dphi_m);
-            gammaSNtrk[idx]->Fill(nTrk, c_sum_m);
+            hCdPhiM[idx]->Fill(range(dphi_m));
+            hSdPhiM[idx]->Fill(range(sumphi_m));
+            deltaS[idx]->Fill(0.5, delta_m);
+            gammaS[idx]->Fill(0.5, gamma_m);
+            deltaSNtrk[idx]->Fill(nTrk, delta_m);
+            gammaSNtrk[idx]->Fill(nTrk, gamma_m);
         }
     }
 }
@@ -173,6 +185,8 @@ void AnalyzerCVE::Finish(const std::string& outFileName) {
     for (int i = 0; i < 6; ++i) {
         if (hCdPhiP[i])     hCdPhiP[i]->Write();
         if (hCdPhiM[i])     hCdPhiM[i]->Write();
+        if (hSdPhiP[i])     hSdPhiP[i]->Write();
+        if (hSdPhiM[i])     hSdPhiM[i]->Write();
         if (deltaP[i])      deltaP[i]->Write();
         if (gammaP[i])      gammaP[i]->Write();
         if (deltaS[i])      deltaS[i]->Write();
