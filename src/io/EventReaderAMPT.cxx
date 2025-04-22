@@ -33,16 +33,39 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
   // 支持单文件或.list文件列表
   if (fn.size() >= 5 && fn.substr(fn.size() - 5) == ".list") {
     // 读取文件列表
-    TChain* chain = new TChain("AMPT");
+    TChain* chain = nullptr;
     std::ifstream inputStream(fn);
     if (!inputStream) {
       std::cerr << "Cannot open list file " << fn << std::endl;
       std::exit(1);
     }
     std::string filePath;
+    std::string treeName;
     while (std::getline(inputStream, filePath)) {
       if (filePath.empty()) continue;
-      std::cout << "Adding file: " << filePath << std::endl;
+
+      // 检测树的名称
+      TFile testFile(filePath.c_str(), "READ");
+      if (!testFile.IsOpen()) {
+        std::cerr << "Cannot open file to check tree: " << filePath << std::endl;
+        std::exit(1);
+      }
+
+      if (testFile.Get("AMPT")) {
+        treeName = "AMPT";
+      } else if (testFile.Get("AMPT_I")) {
+        treeName = "AMPT_I";
+      } else {
+        std::cerr << "Neither 'AMPT' nor 'AMPT_I' tree found in " << filePath << std::endl;
+        std::exit(1);
+      }
+      testFile.Close();
+
+      if (!chain) {
+        // 第一个文件确定tree名字后，再初始化chain
+        chain = new TChain(treeName.c_str());
+      }
+      std::cout << "Adding file (" << treeName << "): " << filePath << std::endl;
       chain->Add(filePath.c_str());
     }
     fTree = chain;
@@ -53,10 +76,18 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
       std::cerr << "Cannot open ROOT file " << fn << std::endl;
       std::exit(1);
     }
-    fTree = static_cast<TTree*>(fFile->Get("AMPT"));
+    if (fFile->Get("AMPT")) {
+      fTree = static_cast<TTree*>(fFile->Get("AMPT"));
+    } else if (fFile->Get("AMPT_I")) {
+      fTree = static_cast<TTree*>(fFile->Get("AMPT_I"));
+    } else {
+      std::cerr << "Neither 'AMPT' nor 'AMPT_I' tree found in " << fn << std::endl;
+      std::exit(1);
+    }
   }
+  
   fNentries = fTree->GetEntries();
-  // 先把 vector 大小调到一个合理上限，比如 100000
+  // 调整 vector 大小
   const std::size_t maxN = 100000;
   fID.resize(maxN);
   fPx.resize(maxN);

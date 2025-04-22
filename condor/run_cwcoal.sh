@@ -53,10 +53,7 @@ echo "Workdir   : $WORKDIR"
 
 /storage/fdunphome/wangchunzheng/CWCoalProject/bin/cwcoal \
   -i "$INPUT_FILE" \
-  -o "$WORKDIR/output.root" \
   -a KDTreeGlobal \
-  -n 10 \
-  -b 0 \
   -w "$WORKDIR"
 
 # ----------------------------
