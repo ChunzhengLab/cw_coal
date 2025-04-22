@@ -6,16 +6,23 @@ cmake_minimum_required(VERSION 3.10)
 project(cw_coal LANGUAGES CXX)
 
 # ------------------------------------------------------------------------------
-# Standard install dirs & RPATH (macOS support)
+# Standard install dirs & RPATH (Linux/macOS support)
 # ------------------------------------------------------------------------------
 include(GNUInstallDirs)
-set(CMAKE_MACOSX_RPATH ON)
+
+if(APPLE)
+  set(CMAKE_MACOSX_RPATH ON)
+  set(CMAKE_INSTALL_RPATH "@loader_path/../${CMAKE_INSTALL_LIBDIR}")
+  set(CMAKE_BUILD_RPATH   "@loader_path/../${CMAKE_INSTALL_LIBDIR}")
+else()
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+  set(CMAKE_BUILD_RPATH   "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+endif()
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
-set(CMAKE_BUILD_RPATH   "@loader_path/../lib")
-set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
 # ------------------------------------------------------------------------------
-# Default install prefix: if not specified, use parent directory of cw_coal/
+# Default install prefix: if not overridden, install into parent of cw_coal/
 # ------------------------------------------------------------------------------
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/.."
@@ -38,7 +45,6 @@ find_package(ROOT REQUIRED COMPONENTS Core RIO Tree)
 # Find nanoflann (mandatory)
 # ------------------------------------------------------------------------------
 find_path(NANOFLANN_INCLUDE_DIR nanoflann.hpp)
-
 if(NANOFLANN_INCLUDE_DIR)
   message(STATUS "Found nanoflann in ${NANOFLANN_INCLUDE_DIR}")
 else()
@@ -46,7 +52,7 @@ else()
 endif()
 
 # ------------------------------------------------------------------------------
-# Include paths (global)
+# Include paths
 # ------------------------------------------------------------------------------
 set(PROJECT_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 include_directories(
@@ -64,16 +70,20 @@ set(DICT_HEADERS
   ${PROJECT_INCLUDE_DIR}/Combiners.h
 )
 set(LINKDEF_FILE ${PROJECT_INCLUDE_DIR}/LinkDef.h)
-include(${ROOT_DIR}/ROOTMacros.cmake)
+
 ROOT_GENERATE_DICTIONARY(
   G__cw_coalDict
   ${DICT_HEADERS}
   LINKDEF ${LINKDEF_FILE}
-  MODULE cw_coal
+  OPTIONS "-I${PROJECT_INCLUDE_DIR}"
 )
-# Install PCM for ROOT introspection
-install(
-  FILES "${CMAKE_CURRENT_BINARY_DIR}/libcw_coal_rdict.pcm"
+
+# ------------------------------------------------------------------------------
+# Install dictionary files so ROOT can load them
+# ------------------------------------------------------------------------------
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}cw_coalDict_rdict.pcm"
+  "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}cw_coalDict.rootmap"
   DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
@@ -84,6 +94,7 @@ file(GLOB_RECURSE SRC_CORE     src/core/*.cxx)
 file(GLOB_RECURSE SRC_IO       src/io/*.cxx)
 file(GLOB_RECURSE SRC_COMBINER src/combiner/*.cxx)
 file(GLOB_RECURSE SRC_ANA      src/ana/*.cxx)
+
 set(SOURCES
   ${SRC_CORE}
   ${SRC_IO}
@@ -106,11 +117,12 @@ target_include_directories(cw_coal PUBLIC
   ${PROJECT_INCLUDE_DIR}/combiner
 )
 target_link_libraries(cw_coal PRIVATE ${ROOT_LIBRARIES})
-# Install the cw_coal shared library
+
+# Install the cw_coal shared library into lib/
 install(TARGETS cw_coal
-  RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}   # install .dylib on macOS
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}   # install .so on Linux
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}   # install static .a if any
+  RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}   # .dylib on macOS
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}   # .so on Linux
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}   # .a if generated
 )
 
 # ------------------------------------------------------------------------------
@@ -124,27 +136,36 @@ target_compile_definitions(cwcoal
 install(TARGETS cwcoal RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # ------------------------------------------------------------------------------
-# Tests: utilities for cw_coal
+# Tests (optional small binaries)
 # ------------------------------------------------------------------------------
 function(add_cw_test name source)
   add_executable(${name} ${source})
   target_link_libraries(${name} PRIVATE cw_coal ${ROOT_LIBRARIES})
   target_compile_definitions(${name}
-    PRIVATE
-      DATA_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/cw_coal/refdata"
+    PRIVATE DATA_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/cw_coal/refdata"
   )
+
+  # Ensure test uses the *same* install libdir (lib64 or lib) as the main app
+  if(APPLE)
+    set(testrpath "@loader_path/../${CMAKE_INSTALL_LIBDIR}")
+  else()
+    set(testrpath "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+  endif()
+
   set_target_properties(${name} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test
-    BUILD_RPATH "@loader_path/../lib"
-    INSTALL_RPATH "@loader_path/../lib"
+    BUILD_RPATH   "${testrpath}"
+    INSTALL_RPATH "${testrpath}"
   )
+
+  # install tests to <prefix>/test alongside bin/ and lib/
   install(TARGETS ${name} RUNTIME DESTINATION test)
 endfunction()
+
 add_cw_test(test_combiner        test/test_combiner.cpp)
 add_cw_test(test_eventReaderAMPT test/test_eventReaderAMPT.cpp)
 
 # ------------------------------------------------------------------------------
-# Installation of headers, reference data, scripts, and analysis macros
+# Install headers, reference data, scripts
 # ------------------------------------------------------------------------------
 install(
   DIRECTORY ${PROJECT_INCLUDE_DIR}/

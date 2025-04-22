@@ -56,8 +56,8 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
     fTree = static_cast<TTree*>(fFile->Get("AMPT"));
   }
   fNentries = fTree->GetEntries();
-  // 先把 vector 大小调到一个合理上限，比如 20000
-  const std::size_t maxN = 20000;
+  // 先把 vector 大小调到一个合理上限，比如 100000
+  const std::size_t maxN = 100000;
   fID.resize(maxN);
   fPx.resize(maxN);
   fPy.resize(maxN);

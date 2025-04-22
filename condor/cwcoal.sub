@@ -1,0 +1,26 @@
+# ==============================================================================
+# HTCondor提交脚本
+# ==============================================================================
+universe       = vanilla
+
+# 基本配置
+executable     = /storage/fdunphome/wangchunzheng/CWCoalProject/scripts/run_cwcoal.sh
+arguments      = /storage/fdunphome/wangchunzheng/CWCoalProject/input/run$(Process).list $(Process)
+
+# 日志配置
+output         = /storage/fdunphome/wangchunzheng/CWCoalProject/logs/job_$(Process).out
+error          = /storage/fdunphome/wangchunzheng/CWCoalProject/logs/job_$(Process).err
+log            = /storage/fdunphome/wangchunzheng/CWCoalProject/logs/job_$(Process).log
+
+# 资源请求
+request_cpus   = 2
+request_memory = 4GB
+request_disk   = 5GB
+
+# 执行策略
+should_transfer_files   = NO
+transfer_executable     = False
++JobFlavour             = "workday"  # 根据集群策略调整
+
+# 提交配置
+queue 4  # 对应run0.list到run3.list
