@@ -35,22 +35,25 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(ROOT REQUIRED COMPONENTS Core RIO Tree)
 
 # ------------------------------------------------------------------------------
-# Include paths
+# Find nanoflann (mandatory)
+# ------------------------------------------------------------------------------
+find_path(NANOFLANN_INCLUDE_DIR nanoflann.hpp)
+
+if(NANOFLANN_INCLUDE_DIR)
+  message(STATUS "Found nanoflann in ${NANOFLANN_INCLUDE_DIR}")
+else()
+  message(FATAL_ERROR "nanoflann is required but was not found. Please install nanoflann first.")
+endif()
+
+# ------------------------------------------------------------------------------
+# Include paths (global)
 # ------------------------------------------------------------------------------
 set(PROJECT_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 include_directories(
   ${PROJECT_INCLUDE_DIR}
   ${ROOT_INCLUDE_DIRS}
+  ${NANOFLANN_INCLUDE_DIR}
 )
-# Optional nanoflann support
-execute_process(
-  COMMAND brew --prefix nanoflann
-  OUTPUT_VARIABLE NANOFANN_PREFIX
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-if(NANOFANN_PREFIX)
-  include_directories(${NANOFANN_PREFIX}/include)
-endif()
 
 # ------------------------------------------------------------------------------
 # ROOT dictionary generation

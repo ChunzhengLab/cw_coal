@@ -1,7 +1,7 @@
 #ifndef EVENT_WRITER_H
 #define EVENT_WRITER_H
 
-#include "Event.h"
+#include "core/Event.h"
 #include <TFile.h>
 #include <TTree.h>
 #include <string>
