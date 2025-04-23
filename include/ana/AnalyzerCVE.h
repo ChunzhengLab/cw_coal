@@ -2,7 +2,10 @@
 #define ANALYZERCVE_H
 
 #include <string>
+#include <cmath>
 #include "core/Event.h"
+#include "TVector2.h"
+#include "TMath.h"
 
 class TH1D;
 class TProfile;
@@ -22,6 +25,9 @@ public:
 
     /// Process a single Event: fill histograms based on hadron baryon number.
     void Process(const Event& evt);
+
+    /// \brief Process a signal event against a pool of background events for mixed-event analysis.
+    void ProcessMixed(const Event& signalEvt, const std::vector<const Event*>& backgroundEvts);
 
     /// Write histograms into a ROOT file and close it.
     /// \param outFileName name of the output ROOT file.
@@ -50,6 +56,9 @@ private:
 
     TProfile* deltaSNtrk[6]; // delta = #LTcos(#Delta#phi)#GT (a !=b)
     TProfile* gammaSNtrk[6]; // gamma = #LTcos(#phi_{1}+#phi_{2})#GT (a !=b)
+
+    /// Helper to analyze a single hadron pair (shared by Process and ProcessMixed)
+    void AnalyzePair(const Hadron* h1, const Hadron* h2, int nTrk);
 };
 
 #endif // ANALYZERCVE_H

@@ -7,6 +7,8 @@
 #include "core/Event.h"
 #include "core/Particle.h"
 #include <cmath>
+#include <vector>
+#include <algorithm>
 
 // Labels for the six charge combinations
 static const char* comboLabels[6] = {
@@ -22,6 +24,15 @@ static constexpr int idxMap[3][3] = {
     {0, 1, 2},
     {1, 3, 4},
     {2, 4, 5}
+};
+
+// map baryon number to type index: 0=baryon,1=antibaryon,2=meson
+static auto partonType = [](double b){ return b>0 ? 0 : (b<0 ? 1 : 2); };
+// normalize delta-phi into [-0.5π,1.5π)
+static auto rangePhi = [](double d){
+    d = TVector2::Phi_mpi_pi(d);
+    if (d < -0.5*TMath::Pi()) d += 2*TMath::Pi();
+    return d;
 };
 
 AnalyzerCVE::AnalyzerCVE() {
@@ -121,61 +132,75 @@ void AnalyzerCVE::Init() {
     }
 }
 
+void AnalyzerCVE::AnalyzePair(const Hadron* h1, const Hadron* h2, int nTrk) {
+    // determine combination index
+    int idx = idxMap[partonType(h1->GetBaryonNumber())]
+                      [partonType(h2->GetBaryonNumber())];
+    if (idx < 0) return;
+
+    // kinematic cuts: 0.2 < pT < 3 GeV/c, -0.8 < eta < 0.8
+    double pt1 = std::hypot(h1->Px(), h1->Py());
+    double pt2 = std::hypot(h2->Px(), h2->Py());
+    double eta1 = std::asinh(h1->Pz()/pt1);
+    double eta2 = std::asinh(h2->Pz()/pt2);
+    if (pt1 < 0.2 || pt1 > 3.0 || pt2 < 0.2 || pt2 > 3.0 ||
+        eta1 < -0.8 || eta1 > 0.8 || eta2 < -0.8 || eta2 > 0.8) return;
+
+    // position-space angles
+    double phi_p1 = TMath::ATan2(h1->Y(),  h1->X());
+    double phi_p2 = TMath::ATan2(h2->Y(),  h2->X());
+    double dphi_p = phi_p1 - phi_p2;
+    double sumphi_p = phi_p1 + phi_p2;
+    double delta_p = std::cos(dphi_p);
+    double gamma_p = std::cos(sumphi_p);
+
+    // momentum-space angles
+    double phi_m1 = TMath::ATan2(h1->Py(), h1->Px());
+    double phi_m2 = TMath::ATan2(h2->Py(), h2->Px());
+    double dphi_m = phi_m1 - phi_m2;
+    double sumphi_m = phi_m1 + phi_m2;
+    double delta_m = std::cos(dphi_m);
+    double gamma_m = std::cos(sumphi_m);
+
+    // fill histograms
+    // position
+    hCdPhiP[idx]->Fill(rangePhi(dphi_p));
+    hSdPhiP[idx]->Fill(rangePhi(sumphi_p));
+    deltaP[idx]->Fill(0.5, delta_p);
+    gammaP[idx]->Fill(0.5, gamma_p);
+    deltaMNtrk[idx]->Fill(nTrk, delta_p);
+    gammaMNtrk[idx]->Fill(nTrk, gamma_p);
+    // momentum
+    hCdPhiM[idx]->Fill(rangePhi(dphi_m));
+    hSdPhiM[idx]->Fill(rangePhi(sumphi_m));
+    deltaS[idx]->Fill(0.5, delta_m);
+    gammaS[idx]->Fill(0.5, gamma_m);
+    deltaSNtrk[idx]->Fill(nTrk, delta_m);
+    gammaSNtrk[idx]->Fill(nTrk, gamma_m);
+}
+
 void AnalyzerCVE::Process(const Event& evt) {
     const auto& hadrons = evt.GetHadrons();
     const int nTrk = evt.GetMultiplicity();
-    auto partonType = [](int b){ return b>0 ? 0 : (b<0 ? 1 : 2); }; // 0: baryon, 1: antibaryon, 2: meson
     for (size_t i = 0; i < hadrons.size(); ++i) {
         for (size_t j = i + 1; j < hadrons.size(); ++j) {
             Hadron* h1 = hadrons[i];
             Hadron* h2 = hadrons[j];
-            auto range = [](double d) {
-                d = TVector2::Phi_mpi_pi(d);
-                if (d < -0.5*TMath::Pi()) d += 2*TMath::Pi();
-                return d;
-            };
-            int b1 = h1->GetBaryonNumber();
-            int b2 = h2->GetBaryonNumber();
-            int idx = idxMap[partonType(b1)][partonType(b2)];
-            if (idx < 0) continue;
-            // kinematic cuts: 0.2 < pT < 3 GeV/c, -0.8 < eta < 0.8
-            double pt1 = std::hypot(h1->Px(), h1->Py());
-            double pt2 = std::hypot(h2->Px(), h2->Py());
-            double eta1 = std::asinh(h1->Pz()/pt1);
-            double eta2 = std::asinh(h2->Pz()/pt2);
-            if (pt1 < 0.2 || pt1 > 3.0 || pt2 < 0.2 || pt2 > 3.0 ||
-                eta1 < -0.8 || eta1 > 0.8 || eta2 < -0.8 || eta2 > 0.8) continue;
+            AnalyzePair(h1, h2, nTrk);
+        }
+    }
+}
 
-            // compute azimuthal angles in position and momentum space
-            double phi_p1   = TMath::ATan2(h1->Y(),  h1->X());
-            double phi_p2   = TMath::ATan2(h2->Y(),  h2->X());
-            double dphi_p   = phi_p1 - phi_p2;
-            double sumphi_p = phi_p1 + phi_p2;
-            double delta_p = TMath::Cos(dphi_p);
-            double gamma_p  = TMath::Cos(sumphi_p);
-
-            double phi_m1   = TMath::ATan2(h1->Py(), h1->Px());
-            double phi_m2   = TMath::ATan2(h2->Py(), h2->Px());
-            double dphi_m   = phi_m1 - phi_m2;
-            double sumphi_m = phi_m1 + phi_m2;
-            double delta_m = TMath::Cos(dphi_m);
-            double gamma_m  = TMath::Cos(sumphi_m);
-
-            // Position-space
-            hCdPhiP[idx]->Fill(range(dphi_p));
-            hSdPhiP[idx]->Fill(range(sumphi_p));
-            deltaP[idx]->Fill(0.5, delta_p);
-            gammaP[idx]->Fill(0.5, gamma_p);
-            deltaMNtrk[idx]->Fill(nTrk, delta_p);
-            gammaMNtrk[idx]->Fill(nTrk, gamma_p);
-
-            // Momentum-space
-            hCdPhiM[idx]->Fill(range(dphi_m));
-            hSdPhiM[idx]->Fill(range(sumphi_m));
-            deltaS[idx]->Fill(0.5, delta_m);
-            gammaS[idx]->Fill(0.5, gamma_m);
-            deltaSNtrk[idx]->Fill(nTrk, delta_m);
-            gammaSNtrk[idx]->Fill(nTrk, gamma_m);
+void AnalyzerCVE::ProcessMixed(const Event& signalEvt, const std::vector<const Event*>& backgroundEvts) {
+    const auto& hadrons1 = signalEvt.GetHadrons();
+    int nTrk = signalEvt.GetMultiplicity();
+    for (const Event* bgEvt : backgroundEvts) {
+        const auto& hadrons2 = bgEvt->GetHadrons();
+        int nTrk2 = bgEvt->GetMultiplicity();
+        for (size_t i = 0; i < hadrons1.size(); ++i) {
+            for (size_t j = 0; j < hadrons2.size(); ++j) {
+                AnalyzePair(hadrons1[i], hadrons2[j], nTrk + nTrk2);
+            }
         }
     }
 }

@@ -18,6 +18,8 @@ public:
 
   // 读取下一条事件，返回 false 表示读完了
   bool NextEvent(Event& out);
+  /// Return the total number of events available in the input
+  Long64_t GetTotalEvents() const { return fNentries; }
 
 private:
   void SetupBranches();

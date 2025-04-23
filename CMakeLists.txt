@@ -136,6 +136,20 @@ target_compile_definitions(cwcoal
 install(TARGETS cwcoal RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # ------------------------------------------------------------------------------
+# analysis CLI tool
+# ------------------------------------------------------------------------------
+add_executable(analysis src/app/analysis.cpp)
+target_link_libraries(analysis PRIVATE cw_coal ${ROOT_LIBRARIES})
+target_compile_definitions(analysis PRIVATE
+  DATA_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/cw_coal/refdata"
+)
+set_target_properties(analysis PROPERTIES
+  BUILD_RPATH "${CMAKE_BUILD_RPATH}"
+  INSTALL_RPATH "${CMAKE_INSTALL_RPATH}"
+)
+install(TARGETS analysis RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+# ------------------------------------------------------------------------------
 # Tests (optional small binaries)
 # ------------------------------------------------------------------------------
 function(add_cw_test name source)
@@ -181,4 +195,12 @@ install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/scripts/
   DESTINATION ${CMAKE_INSTALL_DATADIR}/cw_coal/scripts
   FILES_MATCHING PATTERN "*.C" PATTERN "*.py"
+)
+
+# ------------------------------------------------------------------------------
+# Install condor directory contents into bin/condor
+# ------------------------------------------------------------------------------
+install(
+  DIRECTORY ${CMAKE_SOURCE_DIR}/condor/
+  DESTINATION ${CMAKE_INSTALL_BINDIR}/condor
 )
