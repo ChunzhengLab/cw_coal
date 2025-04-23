@@ -19,16 +19,18 @@ std::string algorithm = "KDTreeGlobal";
 std::string workDir = "."; // Output directory for all files
 int nEvents = 10;
 int sumBn = 0;
+double baryonPreference = 1.0;
 
 static void PrintUsage() {
     std::cout << "Usage: cwcoal [options]\n"
               << "  -h, --help               Show this help message\n"
-              << "  -i, --data-input <file>  AMPT input ROOT file (if omitted, random generation mode)\n"
+              << "  -i, --data-input <file>  AMPT input ROOT file or list (if omitted, random generation mode)\n"
               << "  -o, --data-output <file> Output ROOT file for hadrons (default: output.root)\n"
               << "  -a, --algorithm <name>   Combiner algorithm: KDTreeGlobal, KDTreeGreedy, BruteForceGlobal, BruteForceGreedy (default: KDTreeGlobal)\n"
               << "  -n, --events <N>         Number of events to process/generate (default: 10)\n"
               << "  -b, --bn <B>             Target total baryon number per event (default: 0)\n"
-              << "  -w, --workdir <dir>      Output directory for all files (default: current working directory)\n";
+              << "  -w, --workdir <dir>      Output directory for all files (default: current working directory)\n"
+              << "  -r, --baryon-preference <R>  Baryon preference factor (default: 1.0)\n";
 }
 
 int main(int argc, char** argv) {
@@ -40,11 +42,12 @@ int main(int argc, char** argv) {
         {"events",    required_argument, nullptr, 'n'},
         {"bn",        required_argument, nullptr, 'b'},
         {"workdir",   required_argument, nullptr, 'w'},
+        {"baryon-preference", required_argument, nullptr, 'r'},
         {nullptr,     0,                 nullptr,  0 }
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "hi:o:a:n:b:w:", longOpts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "hi:o:a:n:b:w:r:", longOpts, nullptr)) != -1) {
         switch (opt) {
             case 'h': PrintUsage(); return 0;
             case 'i': dataInput = optarg; break;
@@ -53,6 +56,7 @@ int main(int argc, char** argv) {
             case 'n': nEvents = std::stoi(optarg); break;
             case 'b': sumBn = std::stoi(optarg); break;
             case 'w': workDir = optarg; break;
+            case 'r': baryonPreference = std::stod(optarg); break;
             default:  PrintUsage(); return 1;
         }
     }
@@ -60,13 +64,13 @@ int main(int argc, char** argv) {
     // Select combiner
     std::unique_ptr<CombinerBase> combiner;
     if (algorithm == "KDTreeGlobal") {
-        combiner = std::make_unique<KDTreeGlobal>();
+        combiner = std::make_unique<KDTreeGlobal>(baryonPreference);
     } else if (algorithm == "KDTreeGreedy") {
-        combiner = std::make_unique<KDTreeGreedy>();
+        combiner = std::make_unique<KDTreeGreedy>(baryonPreference);
     } else if (algorithm == "BruteForceGlobal") {
-        combiner = std::make_unique<BruteForceGlobal>();
+        combiner = std::make_unique<BruteForceGlobal>(baryonPreference);
     } else if (algorithm == "BruteForceGreedy") {
-        combiner = std::make_unique<BruteForceGreedy>();
+        combiner = std::make_unique<BruteForceGreedy>(baryonPreference);
     } else {
         std::cerr << "Unknown algorithm: " << algorithm << std::endl;
         return 1;
