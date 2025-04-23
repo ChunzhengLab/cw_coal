@@ -7,19 +7,10 @@
 #include "ana/AnalyzerCVE.h"
 #include "Combiners.h"
 #include <TROOT.h>
-#include <TApplication.h>
 #include <getopt.h>
 #include <iostream>
 #include <memory>
-
-// Variables for input and output file management
-std::string dataInput;
-std::string dataOutput;
-std::string algorithm = "KDTreeGlobal";
-std::string workDir = "."; // Output directory for all files
-int nEvents = 10;
-int sumBn = 0;
-double baryonPreference = 1.0;
+#include <functional>
 
 static void PrintUsage() {
     std::cout << "Usage: cwcoal [options]\n"
@@ -27,13 +18,23 @@ static void PrintUsage() {
               << "  -i, --data-input <file>  AMPT input ROOT file or list (if omitted, random generation mode)\n"
               << "  -o, --data-output <file> Output ROOT file for hadrons (default: output.root)\n"
               << "  -a, --algorithm <name>   Combiner algorithm: KDTreeGlobal, KDTreeGreedy, BruteForceGlobal, BruteForceGreedy (default: KDTreeGlobal)\n"
-              << "  -n, --events <N>         Number of events to process/generate (default: 10)\n"
+              << "  -n, --events <N>         Number of events to process/generate (if omitted, process all events)\n"
               << "  -b, --bn <B>             Target total baryon number per event (default: 0)\n"
-              << "  -w, --workdir <dir>      Output directory for all files (default: current working directory)\n"
+              << "  -s, --savedir <dir>      Output directory for all files (default: current working directory)\n"
               << "  -r, --baryon-preference <R>  Baryon preference factor (default: 1.0)\n";
 }
 
 int main(int argc, char** argv) {
+    // Variables for input and output file management
+    std::string dataInput;
+    std::string dataOutput = "output.root";
+    std::string algorithm = "KDTreeGlobal";
+    std::string saveDir = "."; // Output directory for all files
+    int nEvents = 10;
+    int sumBn = 0;
+    double baryonPreference = 1.0;
+    bool eventsLimited = false;
+
     const struct option longOpts[] = {
         {"help",      no_argument,       nullptr, 'h'},
         {"data-input", required_argument, nullptr, 'i'},
@@ -41,21 +42,21 @@ int main(int argc, char** argv) {
         {"algorithm", required_argument, nullptr, 'a'},
         {"events",    required_argument, nullptr, 'n'},
         {"bn",        required_argument, nullptr, 'b'},
-        {"workdir",   required_argument, nullptr, 'w'},
+        {"savedir",   required_argument, nullptr, 's'},
         {"baryon-preference", required_argument, nullptr, 'r'},
         {nullptr,     0,                 nullptr,  0 }
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "hi:o:a:n:b:w:r:", longOpts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "h:i:o:a:n:b:s:r:", longOpts, nullptr)) != -1) {
         switch (opt) {
             case 'h': PrintUsage(); return 0;
             case 'i': dataInput = optarg; break;
             case 'o': dataOutput = optarg; break;
             case 'a': algorithm = optarg; break;
-            case 'n': nEvents = std::stoi(optarg); break;
+            case 'n': nEvents = std::stoi(optarg); eventsLimited = true; break;
             case 'b': sumBn = std::stoi(optarg); break;
-            case 'w': workDir = optarg; break;
+            case 's': saveDir = optarg; break;
             case 'r': baryonPreference = std::stod(optarg); break;
             default:  PrintUsage(); return 1;
         }
@@ -76,49 +77,78 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::unique_ptr<EventWriter> writer;
-    if (!dataOutput.empty()) {
-        writer = std::make_unique<EventWriter>(workDir + "/" + dataOutput);
-    }
-    AnalyzerQA qa;
-    AnalyzerCVE cve;
-    qa.Init();
-    cve.Init();
+    // Initialize writer and analyzers
+    std::unique_ptr<EventWriter> writer = std::make_unique<EventWriter>(saveDir + "/" + dataOutput);
+    AnalyzerQA qa; qa.Init();
+    AnalyzerCVE cve; cve.Init();
 
+    // Startup banner
+    std::cout << "==================================================================================\n";
+    std::cout << "                  Chunzheng Wang's Quark Coalescence Model \n";
+    std::cout << "             Author: Chunzheng Wang (chunzheng.wang@icloud.com) \n";
+    std::cout << "==================================================================================\n";
+
+    // Mode and event count summary
+    std::cout << ">>>Mode: "
+              << (dataInput.empty()
+                    ? "Random generation mode"
+                    : std::string("AMPT input mode (file: ") + dataInput + ")")
+              << std::endl;
+
+    Long64_t totalEvents = -1;
+    std::function<bool(Event&)> fetch;
     if (!dataInput.empty()) {
-        EventReaderAMPT reader(dataInput);
-        // Read and process events from AMPT
-        for (int ie = 0; ie < nEvents; ++ie) {
-            Event evt;
-            if (!reader.NextEvent(evt)) {
-                std::cerr << "No more events available in input file\n";
-                break;
-            }
-            // Extract partons, combine into hadrons
-            auto partons = evt.GetPartons();
-            auto hadrons = combiner->Combine(partons);
-            for (auto* h : hadrons) evt.AddHadron(h);
-            if (writer) writer->WriteEvent(&evt);
-            qa.Process(evt);
-            cve.Process(evt);
+        auto reader = std::make_shared<EventReaderAMPT>(dataInput);
+        totalEvents = reader->GetTotalEvents();
+        if (eventsLimited) {
+            std::cout << ">>>Number of events to process: " << nEvents << std::endl;
+        } else {
+            std::cout << ">>>Number of events to process: all available events (" << totalEvents << ")" << std::endl;
+            nEvents = static_cast<int>(totalEvents);
         }
+        fetch = [reader](Event& e) { return reader->NextEvent(e); };
     } else {
-        // Random generation mode
-        EventRandomGen gen;
-        for (int ie = 0; ie < nEvents; ++ie) {
-            Event evt = gen.GenerateEvent(-1, 0); // -1 uses default multiplicity sampling
-            // Combine
-            auto partons = evt.GetPartons();
-            auto hadrons = combiner->Combine(partons);
-            for (auto* h : hadrons) evt.AddHadron(h);
-            if (writer) writer->WriteEvent(&evt);
-            qa.Process(evt);
-            cve.Process(evt);
-        }
+        std::cout << ">>>Number of events to process: " << nEvents << std::endl;
+        auto gen = std::make_shared<EventRandomGen>();
+        fetch = [gen](Event& e) { e = gen->GenerateEvent(-1, 0); return true; };
     }
 
-    qa.Finish(workDir + "/qa_" + algorithm + ".root");
-    cve.Finish(workDir + "/cve_" + algorithm + ".root");
+    std::cout << ">>>Baryon preference factor: " << baryonPreference << std::endl;
+    std::cout << ">>>Save directory: " << saveDir << std::endl;
+    std::cout << ">>>Algorithm: " << algorithm << std::endl;
+    if (writer) {
+        std::cout << ">>>Hadrons output file: " << saveDir << "/" << dataOutput << std::endl;
+    }
+
+    // Progress bar
+    auto printProgress = [&](int current) {
+        int width = 80;
+        int pos = static_cast<int>(width * current / nEvents);
+        std::cout << "\r[";
+        for (int i = 0; i < width; ++i) {
+            std::cout << (i < pos ? '=' : ' ');
+        }
+        std::cout << "] " << static_cast<int>(100.0 * current / nEvents)
+                  << "% (" << current << "/" << nEvents << ")" << std::flush;
+        if (current == nEvents) std::cout << std::endl;
+    };
+
+    // Main loop
+    for (int ie = 0; ie < nEvents; ++ie) {
+        Event evt;
+        if (!fetch(evt)) break;
+        auto partons = evt.GetPartons();
+        auto hadrons = combiner->Combine(partons);
+        for (auto* h : hadrons) evt.AddHadron(h);
+        if (writer) writer->WriteEvent(&evt);
+        qa.Process(evt);
+        cve.Process(evt);
+        printProgress(ie + 1);
+    }
+
+    // Finalize
+    qa.Finish(saveDir + "/qa_" + algorithm + ".root");
+    cve.Finish(saveDir + "/cve_" + algorithm + ".root");
     if (writer) writer->Close();
 
     return 0;
