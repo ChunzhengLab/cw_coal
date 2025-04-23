@@ -55,8 +55,8 @@ std::vector<Hadron*> KDTreeGreedy::Combine(const std::vector<Parton*>& partons) 
         double baryonSum = a->GetBaryonNumber() + b->GetBaryonNumber() + c->GetBaryonNumber();
         if (std::round(baryonSum) != 1 && std::round(baryonSum) != -1) continue;
 
-        double distance = a->DistanceTo(*b) + a->DistanceTo(*c) + b->DistanceTo(*c);
-        distance *= m_r;
+        double dist = a->DistanceTo(*b) + a->DistanceTo(*c) + b->DistanceTo(*c);
+        dist = dist / m_r;
 
         double px = a->Px() + b->Px() + c->Px();
         double py = a->Py() + b->Py() + c->Py();
@@ -65,7 +65,7 @@ std::vector<Hadron*> KDTreeGreedy::Combine(const std::vector<Parton*>& partons) 
         double y = (a->Y() + b->Y() + c->Y()) / 3;
         double z = (a->Z() + b->Z() + c->Z()) / 3;
 
-        auto h = new Hadron(x, y, z, px, py, pz, std::round(baryonSum), distance);
+        auto h = new Hadron(x, y, z, px, py, pz, std::round(baryonSum), dist);
         h->AddConstituentID(a->UniqueID());
         h->AddConstituentID(b->UniqueID());
         h->AddConstituentID(c->UniqueID());

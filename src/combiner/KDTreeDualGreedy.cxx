@@ -26,7 +26,7 @@ std::vector<Hadron*> KDTreeDualGreedy::Combine(const std::vector<Parton*>& parto
         if (sameNeighbors.size() == 2 && !sameNeighbors[0]->IsUsed() && !sameNeighbors[1]->IsUsed()) {
             auto d1 = a->DistanceTo(*sameNeighbors[0]);
             auto d2 = a->DistanceTo(*sameNeighbors[1]);
-            baryonDist = (d1 + d2) * m_r;
+            baryonDist = (d1 + d2) / m_r;
         }
 
         if (mesonDist < baryonDist && mesonNeighbor && !mesonNeighbor->IsUsed()) {

@@ -41,7 +41,7 @@ std::vector<Hadron*> BruteForceDualGreedy::Combine(const std::vector<Parton*>& p
       }
     }
 
-    if (closestOpp && (!closestSame1 || closestOppDist < bestTripletDist * m_r)) {
+    if (closestOpp && (!closestSame1 || closestOppDist < (bestTripletDist / m_r))) {
       double x = (a->X() + closestOpp->X()) / 2;
       double y = (a->Y() + closestOpp->Y()) / 2;
       double z = (a->Z() + closestOpp->Z()) / 2;

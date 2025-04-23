@@ -7,7 +7,7 @@
 
 class BruteForceGlobal : public CombinerBase {
 public:
-    explicit BruteForceGlobal(double baryonPreference = 1.0) : m_r(baryonPreference) {}
+    explicit BruteForceGlobal(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {}
     std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
 private:
@@ -16,7 +16,7 @@ private:
 
 class BruteForceGreedy : public CombinerBase {
 public:
-    explicit BruteForceGreedy(double baryonPreference = 1.0) : m_r(baryonPreference) {}
+    explicit BruteForceGreedy(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {}
     std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
 private:
@@ -25,7 +25,7 @@ private:
 
 class BruteForceDualGreedy : public CombinerBase {
 public:
-    explicit BruteForceDualGreedy(double baryonPreference = 1.0) : m_r(baryonPreference) {}
+    explicit BruteForceDualGreedy(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {}
     std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
 private:
@@ -34,7 +34,7 @@ private:
 
 class KDTreeGlobal : public CombinerBase {
 public:
-    explicit KDTreeGlobal(double baryonPreference = 1.0) : m_r(baryonPreference) {}
+    explicit KDTreeGlobal(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {}
     std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
 private:
@@ -43,7 +43,7 @@ private:
 
 class KDTreeGreedy : public CombinerBase {
 public:
-    explicit KDTreeGreedy(double baryonPreference = 1.0) : m_r(baryonPreference) {}
+    explicit KDTreeGreedy(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {}
     std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
 private:
@@ -52,7 +52,7 @@ private:
 
 class KDTreeDualGreedy : public CombinerBase {
 public:
-    explicit KDTreeDualGreedy(double baryonPreference = 1.0) : m_r(baryonPreference) {}
+    explicit KDTreeDualGreedy(double baryonPreference = 1.0) : m_r(2 * baryonPreference) {}
     std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
 private:

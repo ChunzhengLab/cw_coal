@@ -47,7 +47,7 @@ std::vector<Hadron*> BruteForceGlobal::Combine(const std::vector<Parton*>& parto
                 double dist = partons[i]->DistanceTo(*partons[j]) +
                               partons[i]->DistanceTo(*partons[k]) +
                               partons[j]->DistanceTo(*partons[k]);
-                dist *= m_r;
+                dist = dist / m_r;
                 candidates.emplace_back(dist, true, i, j, k);
             }
         }

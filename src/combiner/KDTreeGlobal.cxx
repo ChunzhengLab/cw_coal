@@ -46,7 +46,7 @@ std::vector<Hadron*> KDTreeGlobal::Combine(const std::vector<Parton*>& partons) 
         double baryonNumber = a->GetBaryonNumber() + b->GetBaryonNumber() + c->GetBaryonNumber();
         if (std::round(baryonNumber) != 1 && std::round(baryonNumber) != -1) continue;
         double dist = a->DistanceTo(*b) + a->DistanceTo(*c) + b->DistanceTo(*c);
-        dist *= m_r;
+        dist = dist / m_r;
         candidates.emplace_back(dist, a, b, c);
       }
     }
