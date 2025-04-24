@@ -22,7 +22,8 @@ static void PrintUsage() {
               << "  -n, --events <N>         Number of events to process/generate (if omitted, process all events)\n"
               << "  -b, --bn <B>             Target total baryon number per event (default: 0)\n"
               << "  -s, --savedir <dir>      Output directory for all files (default: current working directory)\n"
-              << "  -r, --baryon-preference <R>  Baryon preference factor (default: 1.0)\n";
+              << "  -r, --baryon-preference <R>  Baryon preference factor (default: 1.0)\n"
+              << "  -F, --shuffle-fraction <F>   Shuffle fraction of parton positions (0.0–1.0, default: 0.0)\n";
 }
 
 int main(int argc, char** argv) {
@@ -36,6 +37,9 @@ int main(int argc, char** argv) {
     double baryonPreference = 1.0;
     bool eventsLimited = false;
 
+    // Shuffle feature
+    double shuffleFraction = -1;
+
     const struct option longOpts[] = {
         {"help",      no_argument,       nullptr, 'h'},
         {"data-input", required_argument, nullptr, 'i'},
@@ -45,11 +49,12 @@ int main(int argc, char** argv) {
         {"bn",        required_argument, nullptr, 'b'},
         {"savedir",   required_argument, nullptr, 's'},
         {"baryon-preference", required_argument, nullptr, 'r'},
+        {"shuffle-fraction", required_argument, nullptr, 'F'},
         {nullptr,     0,                 nullptr,  0 }
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "h:i:o:a:n:b:s:r:", longOpts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "h:i:o:a:n:b:s:r:F:", longOpts, nullptr)) != -1) {
         switch (opt) {
             case 'h': PrintUsage(); return 0;
             case 'i': dataInput = optarg; break;
@@ -59,6 +64,7 @@ int main(int argc, char** argv) {
             case 'b': sumBn = std::stoi(optarg); break;
             case 's': saveDir = optarg; break;
             case 'r': baryonPreference = std::stod(optarg); break;
+            case 'F': shuffleFraction = std::stod(optarg); break;
             default:  PrintUsage(); return 1;
         }
     }
@@ -122,6 +128,9 @@ int main(int argc, char** argv) {
     if (writer) {
         std::cout << ">>>Hadrons output file: " << saveDir << "/" << dataOutput << std::endl;
     }
+    if (shuffleFraction >= 0.0) {
+        std::cout << ">>>Shuffle fraction: " << shuffleFraction << std::endl;
+    }
 
     // Progress bar
     auto printProgress = [&](int current) {
@@ -140,6 +149,9 @@ int main(int argc, char** argv) {
     for (int ie = 0; ie < nEvents; ++ie) {
         Event evt;
         if (!fetch(evt)) break;
+        if (shuffleFraction > 0.0) {
+            evt.ShufflePartons(shuffleFraction);
+        }
         auto partons = evt.GetPartons();
         auto hadrons = combiner->Combine(partons);
         for (auto* h : hadrons) evt.AddHadron(h);

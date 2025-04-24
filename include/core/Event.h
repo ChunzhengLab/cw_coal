@@ -12,6 +12,11 @@ public:
 
   static void ResetIDCounter(unsigned int next = 1) { sNextID = next; }
 
+  enum ShuffleLevel{ kLevel1, kLevel2, kLevel3, kLevel4 };
+  void ShufflePartons(ShuffleLevel level);
+  /// Shuffle a fraction of parton positions; fraction must be between 0 and 1.
+  void ShufflePartons(double fraction);
+
   void AddParton(Parton* p) { fPartons.push_back(p); }
   void AddHadron(Hadron* h) { fHadrons.push_back(h); }
 
