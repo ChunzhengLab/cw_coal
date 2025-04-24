@@ -68,6 +68,12 @@ int PIDInference::InferBaryonPDG(int q1, int q2, int q3, double mass, int spinMu
     std::sort(quarks.begin(), quarks.end(), std::greater<int>());
     int k1 = quarks[0], k2 = quarks[1], k3 = quarks[2];
 
+    // Special-case uds combination for Lambda0 / anti-Lambda0
+    if (k1 == 3 && k2 == 2 && k3 == 1) {
+        int sign = (q1 + q2 + q3 > 0) ? 1 : -1;
+        return sign * 3122;  // Λ0 or anti-Λ0
+    }
+
     // Determine spin multiplicity (2S+1): decuplet (4) vs octet (2)
     int mult = spinMult;
     if (spinMult < 0) {
