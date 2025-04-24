@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     std::string dataInput;
     bool doMix = false;
     std::string saveDir = ".";
-    size_t mixPoolSize = 5;
+    size_t mixPoolSize = 2;
     size_t totalReadEvents = 0;
 
     static struct option longOpts[] = {
@@ -69,6 +69,38 @@ int main(int argc, char** argv) {
     EventReader reader(dataInput,
         doMix ? EventReader::kDeepCopy : EventReader::kShallowCopy);
 
+    // Startup banner
+    std::cout << "==================================================================================\n";
+    std::cout << "              Chunzheng Wang's Quark Coalescence Model Analyzer \n";
+    std::cout << "             Author: Chunzheng Wang (chunzheng.wang@icloud.com) \n";
+    std::cout << "==================================================================================\n";
+    
+    // Determine total events for progress bar
+    size_t nEvents = reader.GetTotalEvents(); // replace with actual method if different
+    
+    std::cout << ">>>Input file: " << dataInput << std::endl;
+    std::cout << ">>>Number of events to process: " << nEvents << std::endl;
+    if (doMix) {
+        std::cout << ">>> Mix event enabled: Yes"
+                  << ", mix pool size: " << mixPoolSize << std::endl;
+    } else {
+        std::cout << ">>> Mix event enabled: No" << std::endl;
+    }
+    std::cout << ">>>Save directory: " << saveDir << std::endl;
+
+    // Progress bar
+    auto printProgress = [&](int current) {
+        int width = 80;
+        int pos = static_cast<int>(width * current / nEvents);
+        std::cout << "\r[";
+        for (int i = 0; i < width; ++i) {
+            std::cout << (i < pos ? '=' : ' ');
+        }
+        std::cout << "] " << static_cast<int>(100.0 * current / nEvents)
+                  << "% (" << current << "/" << nEvents << ")" << std::flush;
+        if (current == nEvents) std::cout << std::endl;
+    };
+
     // Offline analyzers
     AnalyzerCVE cveSame;
     cveSame.Init();
@@ -79,6 +111,7 @@ int main(int argc, char** argv) {
     std::deque<Event*> mixPool;
 
     if (doMix) {
+        cveMix.SetProcessMixed(true);
         cveMix.Init();
     }
 
@@ -86,6 +119,7 @@ int main(int argc, char** argv) {
     Event* evt = nullptr;
     while ((evt = reader.NextEvent())) {
         ++totalReadEvents;
+        printProgress(totalReadEvents);
         // same-event analysis
         cveSame.Process(*evt);
         // QA histogram filling

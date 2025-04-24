@@ -79,8 +79,10 @@ int main(int argc, char** argv) {
 
     // Initialize writer and analyzers
     std::unique_ptr<EventWriter> writer = std::make_unique<EventWriter>(saveDir + "/" + dataOutput);
-    AnalyzerQA qa; qa.Init();
-    AnalyzerCVE cve; cve.Init();
+    AnalyzerQA qa; 
+    AnalyzerCVE cve;
+    qa.Init();
+    cve.Init();
 
     // Startup banner
     std::cout << "==================================================================================\n";

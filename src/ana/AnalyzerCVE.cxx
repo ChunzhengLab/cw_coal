@@ -56,29 +56,31 @@ AnalyzerCVE::~AnalyzerCVE() {
 
 void AnalyzerCVE::Init() {
     for (int i = 0; i < 6; ++i) {
-        const std::string lab = comboLabels[i];
+        const std::string suffix = isProcessMixed ? "_MixEvt" : "";
+        const std::string lab = comboLabels[i] + suffix;
+        const std::string titleSuffix = isProcessMixed ? " Mix Event" : "";
         // Δφ histograms
         hCdPhiP[i] = new TH1D(("hCdPhiP_" + lab).c_str(),
-                              ("#Delta#phi Position " + lab).c_str(),
+                              ("#Delta#phi Position " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                               64, -0.5*TMath::Pi(), 1.5*TMath::Pi());
         hCdPhiP[i]->SetXTitle("#Delta#phi");
         hCdPhiP[i]->SetYTitle("Counts");
 
         hCdPhiM[i] = new TH1D(("hCdPhiM_" + lab).c_str(),
-                              ("#Delta#phi Momentum " + lab).c_str(),
+                              ("#Delta#phi Momentum " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                               64, -0.5*TMath::Pi(), 1.5*TMath::Pi());
         hCdPhiM[i]->SetXTitle("#Delta#phi");
         hCdPhiM[i]->SetYTitle("Counts");
 
         // sumφ
         hSdPhiP[i] = new TH1D(("hSdPhiP_" + lab).c_str(),
-                              ("Sum#phi Position " + lab).c_str(),
+                              ("Sum#phi Position " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                               64, -0.5*TMath::Pi(), 1.5*TMath::Pi());
         hSdPhiP[i]->SetXTitle("Sum#phi");
         hSdPhiP[i]->SetYTitle("Counts");
 
         hSdPhiM[i] = new TH1D(("hSdPhiM_" + lab).c_str(),
-                              ("Sum#phi Momentum " + lab).c_str(),
+                              ("Sum#phi Momentum " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                               64, -0.5*TMath::Pi(), 1.5*TMath::Pi());
         hSdPhiM[i]->SetXTitle("Sum#phi");
         hSdPhiM[i]->SetYTitle("Counts");
@@ -86,46 +88,46 @@ void AnalyzerCVE::Init() {
 
         // delta and gamma
         deltaP[i] = new TProfile(("pDeltaP_" + lab).c_str(),
-                                 ("#LTcos(#Delta#phi)#GT Position " + lab).c_str(),
+                                 ("#LTcos(#Delta#phi)#GT Position " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                                  1, 0, 1);
         deltaP[i]->SetYTitle("#LTcos(#Delta#phi)#GT");
 
         gammaP[i] = new TProfile(("pGammaP_" + lab).c_str(),
-                                 ("#LTcos(#phi_{1}+#phi_{2})#GT Position " + lab).c_str(),
+                                 ("#LTcos(#phi_{1}+#phi_{2})#GT Position " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                                  1, 0, 1);
         gammaP[i]->SetYTitle("#LTcos(#phi_{1}+#phi_{2})#GT");
 
         deltaS[i] = new TProfile(("pDeltaM_" + lab).c_str(),
-                                 ("#LTcos(#Delta#phi)#GT Momentum " + lab).c_str(),
+                                 ("#LTcos(#Delta#phi)#GT Momentum " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                                  1, 0, 1);
         deltaS[i]->SetYTitle("#LTcos(#Delta#phi)#GT");
 
         gammaS[i] = new TProfile(("pGammaM_" + lab).c_str(),
-                                 ("#LTcos(#phi_{1}+#phi_{2})#GT Momentum " + lab).c_str(),
+                                 ("#LTcos(#phi_{1}+#phi_{2})#GT Momentum " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                                  1, 0, 1);
         gammaS[i]->SetYTitle("#LTcos(#phi_{1}+#phi_{2})#GT");
 
         // vs N_tracks profiles
         deltaMNtrk[i] = new TProfile(("pDeltaPNtrk_" + lab).c_str(),
-                                     ("#LTcos(#Delta#phi)#GT vs N_{tracks} Position " + lab).c_str(),
+                                     ("#LTcos(#Delta#phi)#GT vs N_{tracks} Position " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                                      150, 0, 15000);
         deltaMNtrk[i]->SetXTitle("N_{tracks}");
         deltaMNtrk[i]->SetYTitle("#LTcos(#Delta#phi)#GT");
 
         gammaMNtrk[i] = new TProfile(("pGammaPNtrk_" + lab).c_str(),
-                                     ("#LTcos(#phi_{1}+#phi_{2})#GT vs N_{tracks} Position " + lab).c_str(),
+                                     ("#LTcos(#phi_{1}+#phi_{2})#GT vs N_{tracks} Position " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                                      150, 0, 15000);
         gammaMNtrk[i]->SetXTitle("N_{tracks}");
         gammaMNtrk[i]->SetYTitle("#LTcos(#phi_{1}+#phi_{2})#GT");
 
         deltaSNtrk[i] = new TProfile(("pDeltaMNtrk_" + lab).c_str(),
-                                     ("#LTcos(#Delta#phi)#GT vs N_{tracks} Momentum " + lab).c_str(),
+                                     ("#LTcos(#Delta#phi)#GT vs N_{tracks} Momentum " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                                      150, 0, 15000);
         deltaSNtrk[i]->SetXTitle("N_{tracks}");
         deltaSNtrk[i]->SetYTitle("#LTcos(#Delta#phi)#GT");
 
         gammaSNtrk[i] = new TProfile(("pGammaMNtrk_" + lab).c_str(),
-                                     ("#LTcos(#phi_{1}+#phi_{2})#GT vs N_{tracks} Momentum " + lab).c_str(),
+                                     ("#LTcos(#phi_{1}+#phi_{2})#GT vs N_{tracks} Momentum " + std::string(comboLabels[i]) + titleSuffix).c_str(),
                                      150, 0, 15000);
         gammaSNtrk[i]->SetXTitle("N_{tracks}");
         gammaSNtrk[i]->SetYTitle("#LTcos(#phi_{1}+#phi_{2})#GT");

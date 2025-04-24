@@ -33,7 +33,12 @@ public:
     /// \param outFileName name of the output ROOT file.
     void Finish(const std::string& outFileName);
 
+    void SetProcessMixed(bool b) {isProcessMixed = b;}
+
 private:
+
+    bool isProcessMixed;
+
     //             baryon, antibaryon, meson
     // baryon,       0,       1,        2
     // antibaryon,            3,        4
