@@ -116,6 +116,7 @@ bool EventReaderAMPT::NextEvent(Event& out) {
       fPx[i], fPy[i], fPz[i],
       bn
     );
+    p->SetPID(pdg);
     out.AddParton(p);
   }
   return true;

@@ -6,6 +6,7 @@
 #include "ana/AnalyzerQA.h"
 #include "ana/AnalyzerCVE.h"
 #include "Combiners.h"
+#include "core/PIDAssigner.h"
 #include <TROOT.h>
 #include <getopt.h>
 #include <iostream>
@@ -142,6 +143,8 @@ int main(int argc, char** argv) {
         auto partons = evt.GetPartons();
         auto hadrons = combiner->Combine(partons);
         for (auto* h : hadrons) evt.AddHadron(h);
+        // Assign PDG codes to hadrons
+        PIDAssigner::Assign(evt);
         if (writer) writer->WriteEvent(&evt);
         qa.Process(evt);
         cve.Process(evt);

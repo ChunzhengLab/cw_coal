@@ -50,10 +50,16 @@ public:
     return std::sqrt(dx * dx + dy * dy + dz * dz);
   }
 
-  static double GetMassForPDG(int pdg) {
-      auto m = PhysicsConstants::GetMass(pdg);
+  double GetMassFromPDG() {
+      auto m = PhysicsConstants::GetMass(fPID);
       return m.value_or(0.0);
   }
+
+  void SetMass(double mass) {fMass = mass;}
+  double GetMass() const {return fMass;}
+
+  void SetPID(int pid) {fPID = pid;}
+  int GetPID() const {return fPID;} 
 
   double GetBaryonNumber() const { return fBaryonNumber; }
   void SetBaryonNumber(double b) { fBaryonNumber = b; }
@@ -62,8 +68,10 @@ public:
   void SetUID(unsigned int uid) { fUniqueID = uid; }
 
 private:
+  int fPID{0};
   double fPx{0}, fPy{0}, fPz{0};
   double fX{0}, fY{0}, fZ{0};
+  double fMass{0};
   double fBaryonNumber{0.0};
   unsigned int fUniqueID{0}; // Changed to unsigned int
   static unsigned int sNextID; // Added static member

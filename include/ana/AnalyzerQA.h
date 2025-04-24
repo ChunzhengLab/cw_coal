@@ -57,6 +57,9 @@ private:
     TProfile* v2_pt_ab;
     TProfile* v2_pt_m;
 
+    TH1D* hPIDUnsort;
+    TH1D* hPID;
+    TH1D* hPIDName;
 };
 
 #endif // ANALYZERQA_H

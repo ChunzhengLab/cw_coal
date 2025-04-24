@@ -1,13 +1,22 @@
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <utility>
+#include <string>
+#include "TH1.h"  // for TH1::kCanRebin
 #include "ana/AnalyzerQA.h"
 #include "TFile.h"
 #include "TH1D.h"
 #include <cmath>
+#include "TDatabasePDG.h"
+#include "TParticlePDG.h"
 
 AnalyzerQA::AnalyzerQA()
   : hPt_b(nullptr), hPt_ab(nullptr), hPt_m(nullptr),
     hEta_b(nullptr), hEta_ab(nullptr), hEta_m(nullptr),
     hPhiM_b(nullptr), hPhiM_ab(nullptr), hPhiM_m(nullptr),
-    hPhiP_b(nullptr), hPhiP_ab(nullptr), hPhiP_m(nullptr) {}
+    hPhiP_b(nullptr), hPhiP_ab(nullptr), hPhiP_m(nullptr)
+  , hPIDUnsort(nullptr), hPID(nullptr), hPIDName(nullptr) {}
 
 AnalyzerQA::~AnalyzerQA() {
     // Histograms and profiles are owned by ROOT; do not delete here to avoid double-free.
@@ -34,6 +43,9 @@ void AnalyzerQA::Init() {
     hPhiP_b  = new TH1D("hPhiP_b",  "#phi_{p} - Baryons; #phi_{p}; Counts",64, 0, 2*M_PI);
     hPhiP_ab = new TH1D("hPhiP_ab", "#phi_{p} - Anti-Baryons; #phi_{p}; Counts",64, 0, 2*M_PI);
     hPhiP_m  = new TH1D("hPhiP_m",  "#phi_{p} - Mesons; #phi_{p}; Counts",64, 0, 2*M_PI);
+
+    // PID histogram with dynamic string labels
+    hPIDUnsort = new TH1D("hPIDUnsort", "Unsorted Hadron PID labels;PID;Counts", 1, 0, 0);
 }
 
 void AnalyzerQA::Process(const Event& evt) {
@@ -57,6 +69,13 @@ void AnalyzerQA::Process(const Event& evt) {
             hPhiM_m->Fill(phi_m); hPhiP_m->Fill(phi_p);
         }
     }
+
+    // Fill PID histogram
+    for (auto* hadron : evt.GetHadrons()) {
+        int pid = hadron->GetPID();
+        std::string pidLabel = std::to_string(pid);
+        hPIDUnsort->Fill(pidLabel.c_str(), 1.0);
+    }
 }
 
 void AnalyzerQA::Finish(const std::string& outFileName) {
@@ -65,5 +84,47 @@ void AnalyzerQA::Finish(const std::string& outFileName) {
     hEta_b->Write();  hEta_ab->Write();  hEta_m->Write();
     hPhiM_b->Write(); hPhiM_ab->Write(); hPhiM_m->Write();
     hPhiP_b->Write(); hPhiP_ab->Write(); hPhiP_m->Write();
+
+    // Prepare PID counts for sorting
+    int nbins = hPIDUnsort->GetNbinsX();
+    std::vector<std::pair<int,double>> pidCounts;
+    pidCounts.reserve(nbins);
+    for (int ib = 1; ib <= nbins; ++ib) {
+        const char* lbl = hPIDUnsort->GetXaxis()->GetBinLabel(ib);
+        if (!lbl || lbl[0]=='\0') continue;
+        int pid = std::stoi(lbl);
+        double cnt = hPIDUnsort->GetBinContent(ib);
+        if (cnt <= 0) continue;
+        pidCounts.emplace_back(pid, cnt);
+    }
+    // Sort by count descending
+    std::sort(pidCounts.begin(), pidCounts.end(),
+              [](auto &a, auto &b){ return a.second > b.second; });
+
+    // 1) Histogram sorted by count with PID labels
+    hPID = new TH1D("hPID", "PID Sorted by Count;PID;Counts",
+                    pidCounts.size(), 0.5, pidCounts.size()+0.5);
+    for (size_t i = 0; i < pidCounts.size(); ++i) {
+        int pid = pidCounts[i].first;
+        double cnt = pidCounts[i].second;
+        hPID->SetBinContent(i+1, cnt);
+        hPID->GetXaxis()->SetBinLabel(i+1, Form("%d", pid));
+    }
+    hPID->Write();
+
+    // 2) Histogram sorted by count with particle names
+    TDatabasePDG* pdgDB = TDatabasePDG::Instance();
+    hPIDName = new TH1D("hPIDName", "PID Sorted by Count with Names;Name;Counts",
+                        pidCounts.size(), 0.5, pidCounts.size()+0.5);
+    for (size_t i = 0; i < pidCounts.size(); ++i) {
+        int pid = pidCounts[i].first;
+        double cnt = pidCounts[i].second;
+        TParticlePDG* part = pdgDB->GetParticle(pid);
+        const char* name = part ? part->GetName() : "Unknown";
+        hPIDName->SetBinContent(i+1, cnt);
+        hPIDName->GetXaxis()->SetBinLabel(i+1, name);
+    }
+    hPIDName->Write();
+
     outFile.Close();
 }

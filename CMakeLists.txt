@@ -39,7 +39,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # ------------------------------------------------------------------------------
 # Find dependencies
 # ------------------------------------------------------------------------------
-find_package(ROOT REQUIRED COMPONENTS Core RIO Tree)
+find_package(ROOT REQUIRED COMPONENTS Core RIO Tree Hist EG)
 
 # ------------------------------------------------------------------------------
 # Find nanoflann (mandatory)
@@ -177,6 +177,7 @@ endfunction()
 
 add_cw_test(test_combiner        test/test_combiner.cpp)
 add_cw_test(test_eventReaderAMPT test/test_eventReaderAMPT.cpp)
+add_cw_test(test_pidInference    test/test_pidInference.cpp)
 
 # ------------------------------------------------------------------------------
 # Install headers, reference data, scripts

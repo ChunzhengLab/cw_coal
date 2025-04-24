@@ -72,6 +72,17 @@ inline std::optional<double> GetMass(int pdgCode) {
 // Controls the relative likelihood of forming baryons vs mesons
 constexpr double kBaryonPreferenceFactor = 1.0;
 
+//----------------------------------------------------------------------------//
+// Parameters used by PIDInference for meson and baryon formation
+// Vector-to-pseudoscalar meson ratio (V/P)
+constexpr double kMesonVectorToPseudoscalarRatio = 1.0/3.0;
+// ρ⁰/π⁰ production ratio (ρ⁰/π⁰) initialization
+constexpr double kRhoToPionRatio = 0.36;
+// ω/ρ⁰ production ratio (ω/ρ⁰) initialization
+constexpr double kOmegaToRhoRatio = 1.90;
+// K*/K production ratio (K*∶K) initialization
+constexpr double kKStarToKRatio = 0.50;
+
 // Returns a reference to the predefined multiplicity histogram
 inline const TH1I& GetMultiplicityHistogram() {
     static bool initialized = false;

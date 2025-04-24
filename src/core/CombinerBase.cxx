@@ -1,5 +1,5 @@
 #include "CombinerBase.h"
-#include "Particle.h"
+#include "core/Particle.h"
 #include <algorithm>
 #include <vector>
 
@@ -34,6 +34,16 @@ std::vector<Hadron*> CombinerBase::Afterburner(const std::vector<Parton*>& parto
         double formation = a->DistanceTo(*b);
 
         Hadron* h = new Hadron(x, y, z, px, py, pz, 0, formation);
+        // compute invariant mass
+        double m1 = a->GetMassFromPDG();
+        double m2 = b->GetMassFromPDG();
+        double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1*m1);
+        double E2 = std::sqrt(b->Px()*b->Px() + b->Py()*b->Py() + b->Pz()*b->Pz() + m2*m2);
+        double Etot = E1 + E2;
+        double p2 = px*px + py*py + pz*pz;
+        double invMass = (Etot*Etot > p2) ? std::sqrt(Etot*Etot - p2) : 0.0;
+        h->SetMass(invMass);
+
         h->AddConstituentID(a->UniqueID());
         h->AddConstituentID(b->UniqueID());
         a->MarkUsed();
@@ -47,9 +57,9 @@ std::vector<Hadron*> CombinerBase::Afterburner(const std::vector<Parton*>& parto
     }
 
     for (size_t i = 0; i + 2 < remain.size(); i += 3) {
-        Parton* a = remain[i];
-        Parton* b = remain[i + 1];
-        Parton* c = remain[i + 2];
+        auto* a = remain[i];
+        auto* b = remain[i + 1];
+        auto* c = remain[i + 2];
 
         double x = (a->X() + b->X() + c->X()) / 3;
         double y = (a->Y() + b->Y() + c->Y()) / 3;
@@ -61,6 +71,18 @@ std::vector<Hadron*> CombinerBase::Afterburner(const std::vector<Parton*>& parto
         int baryonNumber = std::round(a->GetBaryonNumber() + b->GetBaryonNumber() + c->GetBaryonNumber());
 
         Hadron* h = new Hadron(x, y, z, px, py, pz, baryonNumber, formation);
+        // compute invariant mass for baryon
+        double m1 = a->GetMassFromPDG();
+        double m2 = b->GetMassFromPDG();
+        double m3 = c->GetMassFromPDG();
+        double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1*m1);
+        double E2 = std::sqrt(b->Px()*b->Px() + b->Py()*b->Py() + b->Pz()*b->Pz() + m2*m2);
+        double E3 = std::sqrt(c->Px()*c->Px() + c->Py()*c->Py() + c->Pz()*c->Pz() + m3*m3);
+        double Etot = E1 + E2 + E3;
+        double p2 = px*px + py*py + pz*pz;
+        double invMass = (Etot*Etot > p2) ? std::sqrt(Etot*Etot - p2) : 0.0;
+        h->SetMass(invMass);
+
         h->AddConstituentID(a->UniqueID());
         h->AddConstituentID(b->UniqueID());
         h->AddConstituentID(c->UniqueID());

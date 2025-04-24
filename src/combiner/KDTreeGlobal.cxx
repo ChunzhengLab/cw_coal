@@ -57,9 +57,22 @@ std::vector<Hadron*> KDTreeGlobal::Combine(const std::vector<Parton*>& partons) 
   for (const auto& candi : candidates) {
     if (candi.isBaryon) {
       if (candi.a->IsUsed() || candi.b->IsUsed() || candi.c->IsUsed()) continue;
+      double m1 = candi.a->GetMassFromPDG();
+      double E1 = std::sqrt(candi.a->Px()*candi.a->Px() + candi.a->Py()*candi.a->Py() + candi.a->Pz()*candi.a->Pz()
+                            + m1 * m1);
+      double m2 = candi.b->GetMassFromPDG();
+      double E2 = std::sqrt(candi.b->Px()*candi.b->Px() + candi.b->Py()*candi.b->Py() + candi.b->Pz()*candi.b->Pz()
+                            + m2 * m2);
+      double m3 = candi.c->GetMassFromPDG();
+      double E3 = std::sqrt(candi.c->Px()*candi.c->Px() + candi.c->Py()*candi.c->Py() + candi.c->Pz()*candi.c->Pz()
+                            + m3 * m3);
       double px = candi.a->Px() + candi.b->Px() + candi.c->Px();
       double py = candi.a->Py() + candi.b->Py() + candi.c->Py();
       double pz = candi.a->Pz() + candi.b->Pz() + candi.c->Pz();
+      // compute invariant mass for baryon
+      double Etot = E1 + E2 + E3;
+      double p2_tot = px*px + py*py + pz*pz;
+      double invMass = (Etot*Etot > p2_tot) ? std::sqrt(Etot*Etot - p2_tot) : 0.0;
       double x = (candi.a->X() + candi.b->X() + candi.c->X()) / 3;
       double y = (candi.a->Y() + candi.b->Y() + candi.c->Y()) / 3;
       double z = (candi.a->Z() + candi.b->Z() + candi.c->Z()) / 3;
@@ -70,7 +83,7 @@ std::vector<Hadron*> KDTreeGlobal::Combine(const std::vector<Parton*>& partons) 
                           candi.b->GetBaryonNumber() +
                           candi.c->GetBaryonNumber()),
                           formation);
-      
+      h->SetMass(invMass);
       h->SetPosition(x, y, z);
       h->AddConstituentID(candi.a->UniqueID());
       h->AddConstituentID(candi.b->UniqueID());
@@ -79,9 +92,19 @@ std::vector<Hadron*> KDTreeGlobal::Combine(const std::vector<Parton*>& partons) 
       candi.a->MarkUsed(); candi.b->MarkUsed(); candi.c->MarkUsed();
     } else {
       if (candi.a->IsUsed() || candi.b->IsUsed()) continue;
+      double m1 = candi.a->GetMassFromPDG();
+      double E1 = std::sqrt(candi.a->Px()*candi.a->Px() + candi.a->Py()*candi.a->Py() + candi.a->Pz()*candi.a->Pz()
+                            + m1 * m1);
+      double m2 = candi.b->GetMassFromPDG();
+      double E2 = std::sqrt(candi.b->Px()*candi.b->Px() + candi.b->Py()*candi.b->Py() + candi.b->Pz()*candi.b->Pz()
+                            + m2 * m2);
       double px = candi.a->Px() + candi.b->Px();
       double py = candi.a->Py() + candi.b->Py();
       double pz = candi.a->Pz() + candi.b->Pz();
+      // compute invariant mass for meson
+      double Etot = E1 + E2;
+      double p2_tot = px*px + py*py + pz*pz;
+      double invMass = (Etot*Etot > p2_tot) ? std::sqrt(Etot*Etot - p2_tot) : 0.0;
       double x = (candi.a->X() + candi.b->X()) / 2;
       double y = (candi.a->Y() + candi.b->Y()) / 2;
       double z = (candi.a->Z() + candi.b->Z()) / 2;
@@ -91,6 +114,7 @@ std::vector<Hadron*> KDTreeGlobal::Combine(const std::vector<Parton*>& partons) 
                           std::round(candi.a->GetBaryonNumber() +
                           candi.b->GetBaryonNumber()),
                           formation);
+      h->SetMass(invMass);
       h->SetPosition(x, y, z);
       h->AddConstituentID(candi.a->UniqueID());
       h->AddConstituentID(candi.b->UniqueID());
