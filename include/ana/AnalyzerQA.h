@@ -60,6 +60,9 @@ private:
     TH1D* hPIDUnsort;
     TH1D* hPID;
     TH1D* hPIDName;
+
+    TH1D* hRatio;
+
 };
 
 #endif // ANALYZERQA_H

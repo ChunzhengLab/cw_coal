@@ -16,7 +16,8 @@ AnalyzerQA::AnalyzerQA()
     hEta_b(nullptr), hEta_ab(nullptr), hEta_m(nullptr),
     hPhiM_b(nullptr), hPhiM_ab(nullptr), hPhiM_m(nullptr),
     hPhiP_b(nullptr), hPhiP_ab(nullptr), hPhiP_m(nullptr)
-  , hPIDUnsort(nullptr), hPID(nullptr), hPIDName(nullptr) {}
+  , hPIDUnsort(nullptr), hPID(nullptr), hPIDName(nullptr)
+  , hRatio(nullptr) {}
 
 AnalyzerQA::~AnalyzerQA() {
     // Histograms and profiles are owned by ROOT; do not delete here to avoid double-free.
@@ -46,6 +47,19 @@ void AnalyzerQA::Init() {
 
     // PID histogram with dynamic string labels
     hPIDUnsort = new TH1D("hPIDUnsort", "Unsorted Hadron PID labels;PID;Counts", 1, 0, 0);
+
+    // Ratio histogram
+    hRatio = new TH1D("hRatio", "Hadron Ratios;Ratio;Value", 7, 0.5, 7.5);
+    {
+      auto* ax = hRatio->GetXaxis();
+      ax->SetBinLabel(1, "(#bar{B}+B)/M");
+      ax->SetBinLabel(2, "#bar{B}/B");
+      ax->SetBinLabel(3, "p/#pi^{+}");
+      ax->SetBinLabel(4, "#bar{p}/p");
+      ax->SetBinLabel(5, "#Lambda/p");
+      ax->SetBinLabel(6, "K^{+}/#pi^{+}");
+      ax->SetBinLabel(7, "#rho^{+}/#pi^{+}");
+    }
 }
 
 void AnalyzerQA::Process(const Event& evt) {
@@ -125,6 +139,44 @@ void AnalyzerQA::Finish(const std::string& outFileName) {
         hPIDName->GetXaxis()->SetBinLabel(i+1, name);
     }
     hPIDName->Write();
+
+    // Compute counts from hPIDUnsort using PDG
+    double nBaryon = 0, nAntiBaryon = 0, nMeson = 0;
+    double nProton = 0, nAntiProton = 0, nLambda = 0, nKaonPlus = 0, nRhoPlus = 0, nPionPlus = 0;
+    for (int ib = 1; ib <= nbins; ++ib) {
+      const char* lbl = hPIDUnsort->GetXaxis()->GetBinLabel(ib);
+      if (!lbl || !*lbl) continue;
+      int pid = std::stoi(lbl);
+      double cnt = hPIDUnsort->GetBinContent(ib);
+      if (cnt <= 0) continue;
+      // Classify by PID using PDG ID range
+      int abspid = std::abs(pid);
+      if (abspid >= 1000 && abspid < 6000) {
+          // Baryons have |PID| in [1000,6000)
+          if (pid > 0) nBaryon += cnt;
+          else         nAntiBaryon += cnt;
+      } else {
+          // Mesons have |PID| < 1000
+          nMeson += cnt;
+      }
+      if      (pid == 2212)   nProton     = cnt;
+      else if (pid == -2212)  nAntiProton = cnt;
+      else if (pid == 3122)   nLambda     = cnt;
+      else if (pid == 321)    nKaonPlus   = cnt;
+      else if (pid == 213)    nRhoPlus    = cnt;
+      else if (pid == 211)    nPionPlus   = cnt;
+    }
+    // Fill ratio bins
+    if (nMeson > 0)      hRatio->SetBinContent(1, (nAntiBaryon + nBaryon) / nMeson);
+    if (nBaryon > 0)     hRatio->SetBinContent(2, nAntiBaryon / nBaryon);
+    if (nPionPlus > 0) {
+      hRatio->SetBinContent(3, nProton     / nPionPlus);
+      hRatio->SetBinContent(6, nKaonPlus   / nPionPlus);
+      hRatio->SetBinContent(7, nRhoPlus    / nPionPlus);
+    }
+    if (nProton > 0)     hRatio->SetBinContent(4, nAntiProton / nProton);
+    if (nProton > 0)     hRatio->SetBinContent(5, nLambda     / nProton);
+    hRatio->Write();
 
     outFile.Close();
 }

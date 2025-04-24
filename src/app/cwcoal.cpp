@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
         std::cout << ">>>Hadrons output file: " << saveDir << "/" << dataOutput << std::endl;
     }
     if (shuffleFraction >= 0.0) {
-        std::cout << ">>>Shuffle fraction: " << shuffleFraction << std::endl;
+        std::cout << ">>>Shuffle fraction of parton positions: " << shuffleFraction << std::endl;
     }
 
     // Progress bar
