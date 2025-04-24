@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <optional>
 #include "TH1I.h"
+#include <vector>
 
 namespace PhysicsConstants {
 inline const std::unordered_map<int, double>& GetMassTable() {
@@ -55,7 +56,25 @@ inline const std::unordered_map<int, double>& GetMassTable() {
         {kXiMinus,    1.32171},
         {kXiPlusBar,  1.32171},
         {kOmegaMinus, 1.67245},
-        {kOmegaPlusBar, 1.67245}
+        {kOmegaPlusBar, 1.67245},
+
+        // Charmonium states (in GeV)
+        {441,   2.9839},    // ηc(1S)
+        {443,   3.09690},   // J/ψ(1S)
+        {10441, 3.41475},   // χc0(1P)
+        {10443, 3.51066},   // χc1(1P)
+        {445,   3.55620},   // χc2(1P)
+        {100441,3.63990},   // ηc(2S)
+        {100443,3.68610},   // ψ(2S)
+        {30443, 3.77313},   // ψ(3770)
+        {100445,4.15300},   // ψ(4160)
+        {9000443,4.03900},  // χc0(4500) [if used]
+        {9010443,4.19100},  // χc1(4500) [if used]
+        {9020443,4.42100},  // χc2(4500) [if used]
+        // Bottomonium states (in GeV)
+        {551,   9.3987},    // ηb(1S)
+        {553,   9.46030},   // ϒ(1S)
+        {10551,10.5794},    // ϒ(4S) mapped to code 10551
     };
     return massTable;
 }
@@ -172,6 +191,8 @@ inline const TH1I& GetMultiplicityHistogram() {
     }
     return mult;
 }
+
+
 } // namespace PhysicsConstants
 
 #endif // PHYSICS_CONSTANTS_H

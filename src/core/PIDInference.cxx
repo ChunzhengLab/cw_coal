@@ -3,32 +3,8 @@
 #include <iostream>
 #include "core/PhysicsConstants.h"
 #include <random>
+#include <vector>
 
-namespace {
-    // 返回给定 PDG 码的偶素或重夸克偶素的静质量 (用于质量择优，单位 MeV)
-    int ULMASS(int pdg) {
-        switch (std::abs(pdg)) {
-            case 441: return 2984;
-            case 443: return 3097;
-            case 10441: return 3415;
-            case 20443: return 3511;
-            case 445: return 3556;
-            case 100441: return 3640;
-            case 100443: return 3686;
-            case 30443: return 3770;
-            case 100445: return 3927;
-            case 9000443: return 4040;
-            case 9010443: return 4191;
-            case 9020443: return 4421;
-            case 551: return 9390;
-            case 553: return 9460;
-            case 10551: return 9890;
-            case 661: return 174000;
-            case 663: return 175000;
-            default: return 0;
-        }
-    }
-}
 
 // 定义内部 RNG
 std::mt19937 PIDInference::rng_{std::random_device{}()};
@@ -89,8 +65,8 @@ int PIDInference::InferBaryonPDG(int q1, int q2, int q3, double mass, int spinMu
         // octet: two possible orderings, pick by mass closeness
         int pdg1 = 1000 * k1 + 100 * k2 + 10 * k3 + mult;
         int pdg2 = 1000 * k1 + 100 * k3 + 10 * k2 + mult;
-        double m1 = ULMASS(pdg1);
-        double m2 = ULMASS(pdg2);
+        double m1 = PhysicsConstants::GetMass(pdg1).value_or(0.0);
+        double m2 = PhysicsConstants::GetMass(pdg2).value_or(0.0);
         // 当与两种排列的差值相等或更小时，优先选择 pdg1
         pdg = (std::abs(mass - m1) <= std::abs(mass - m2)) ? pdg1 : pdg2;
     }
@@ -104,35 +80,33 @@ int PIDInference::InferBaryonPDG(int q1, int q2, int q3, double mass, int spinMu
 
 // 根据重夸克 flavor (4=c,5=b,6=t) 与质量，在预定义偶素列表中选最接近的 PDG 码
 int PIDInference::InferQuarkoniumPDG(int flavor, double mass) {
-    static const int nccbar = 13;
-    static const int idcc[nccbar] = {
-        441, 443, 10441, 20443, 10443, 445, 100441,
-        100443, 30443, 100445, 9000443, 9010443, 9020443
-    };
-    static const double ccmass[nccbar] = {
-        2.9836, 3.0969, 3.4148, 3.5107, 3.5254, 3.5562,
-        3.6394, 3.6861, 3.7732, 3.9272, 4.039, 4.191, 4.421
-    };
-
     if (flavor == 4) { // charm
-        for (int i = 1; i < nccbar; ++i) {
-            if (mass <= ccmass[0]) return idcc[0];
-            if (mass > ccmass[nccbar - 1]) return idcc[nccbar - 1];
-            if (mass > ccmass[i - 1] && mass <= ccmass[i]) {
-                return std::abs(mass - ccmass[i - 1]) < std::abs(mass - ccmass[i])
-                    ? idcc[i - 1] : idcc[i];
+        // Local charmonium PDG codes
+        static const std::vector<int> pdgList = {
+            441, 443, 10441, 20443, 10443, 445,
+            100441, 100443, 30443, 100445, 9000443, 9010443, 9020443
+        };
+        int bestPdg = pdgList.front();
+        double bestDiff = std::abs(mass - PhysicsConstants::GetMass(bestPdg).value_or(0.0));
+        for (int pdg : pdgList) {
+            double m = PhysicsConstants::GetMass(pdg).value_or(0.0);
+            double diff = std::abs(mass - m);
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                bestPdg = pdg;
             }
         }
+        return bestPdg;
     } else if (flavor == 5) { // bottom
         int pdg = 100 * flavor + 10 * flavor + 1;
-        if (std::abs(mass - ULMASS(pdg)) > std::abs(mass - ULMASS(pdg + 2))) {
+        if (std::abs(mass - PhysicsConstants::GetMass(pdg).value_or(0.0)) > std::abs(mass - PhysicsConstants::GetMass(pdg + 2).value_or(0.0))) {
             pdg += 2;
-            if (std::abs(mass - ULMASS(553)) > std::abs(mass - ULMASS(10551)))
+            if (std::abs(mass - PhysicsConstants::GetMass(553).value_or(0.0)) > std::abs(mass - PhysicsConstants::GetMass(10551).value_or(0.0)))
                 pdg = 10551;
         }
         return pdg;
     } else if (flavor == 6) { // top
-        return (std::abs(mass - ULMASS(661)) > std::abs(mass - ULMASS(663))) ? 663 : 661;
+        return (std::abs(mass - PhysicsConstants::GetMass(661).value_or(0.0)) > std::abs(mass - PhysicsConstants::GetMass(663).value_or(0.0))) ? 663 : 661;
     }
 
     return 0;
