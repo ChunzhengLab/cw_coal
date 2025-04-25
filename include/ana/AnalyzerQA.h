@@ -63,6 +63,7 @@ private:
 
     TH1D* hRatio;
 
+    TProfile* hAfterBurnedFlagRatio;
 };
 
 #endif // ANALYZERQA_H

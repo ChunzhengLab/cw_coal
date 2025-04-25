@@ -188,6 +188,8 @@ void AnalyzerCVE::Process(const Event& evt) {
         for (size_t j = i + 1; j < hadrons.size(); ++j) {
             Hadron* h1 = hadrons[i];
             Hadron* h2 = hadrons[j];
+            if(h1->IsAfterBurned()) continue;
+            if(h2->IsAfterBurned()) continue;
             AnalyzePair(h1, h2, nTrk);
         }
     }
@@ -201,6 +203,8 @@ void AnalyzerCVE::ProcessMixed(const Event& signalEvt, const std::vector<const E
         int nTrk2 = bgEvt->GetMultiplicity();
         for (size_t i = 0; i < hadrons1.size(); ++i) {
             for (size_t j = 0; j < hadrons2.size(); ++j) {
+                if(hadrons1[i]->IsAfterBurned()) continue;
+                if(hadrons2[j]->IsAfterBurned()) continue;
                 AnalyzePair(hadrons1[i], hadrons2[j], nTrk + nTrk2);
             }
         }

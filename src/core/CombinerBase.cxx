@@ -2,6 +2,7 @@
 #include "core/Particle.h"
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 
 std::vector<Hadron*> CombinerBase::Afterburner(const std::vector<Parton*>& partons) {
@@ -43,6 +44,7 @@ std::vector<Hadron*> CombinerBase::Afterburner(const std::vector<Parton*>& parto
         double p2 = px*px + py*py + pz*pz;
         double invMass = (Etot*Etot > p2) ? std::sqrt(Etot*Etot - p2) : 0.0;
         h->SetMass(invMass);
+        h->SetAfterBurnedFlag(true);
 
         h->AddConstituentID(a->UniqueID());
         h->AddConstituentID(b->UniqueID());
@@ -82,6 +84,7 @@ std::vector<Hadron*> CombinerBase::Afterburner(const std::vector<Parton*>& parto
         double p2 = px*px + py*py + pz*pz;
         double invMass = (Etot*Etot > p2) ? std::sqrt(Etot*Etot - p2) : 0.0;
         h->SetMass(invMass);
+        h->SetAfterBurnedFlag(true);
 
         h->AddConstituentID(a->UniqueID());
         h->AddConstituentID(b->UniqueID());

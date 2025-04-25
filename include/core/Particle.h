@@ -118,12 +118,15 @@ public:
 
   void AddConstituentID(unsigned int id) { fConstituentIDs.push_back(id); }
   const std::vector<unsigned int>& GetConstituentIDs() const { return fConstituentIDs; }
+  void SetAfterBurnedFlag (bool b) {isAfterBurned = b;};
+  bool IsAfterBurned() const {return isAfterBurned;}
 
 private:
   double fFormationDistance{0.0};
+  bool isAfterBurned{false};
   std::vector<unsigned int> fConstituentIDs; // Unique IDs of partons forming this hadron
 
-  ClassDef(Hadron, 3)
+  ClassDef(Hadron, 4)
 };
 
 #endif // PARTICLE_H

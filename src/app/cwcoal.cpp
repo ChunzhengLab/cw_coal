@@ -12,6 +12,8 @@
 #include <iostream>
 #include <memory>
 #include <functional>
+#include <sstream>
+#include <iomanip>
 
 static void PrintUsage() {
     std::cout << "Usage: cwcoal [options]\n"
@@ -164,8 +166,11 @@ int main(int argc, char** argv) {
     }
 
     // Finalize
-    qa.Finish(saveDir + "/qa_" + algorithm + ".root");
-    cve.Finish(saveDir + "/cve_" + algorithm + ".root");
+    std::ostringstream ossQA, ossCVE;
+    ossQA << saveDir << "/qa_" << algorithm << "_r" << std::fixed << std::setprecision(2) << baryonPreference << ".root";
+    ossCVE << saveDir << "/cve_" << algorithm << "_r" << std::fixed << std::setprecision(2) << baryonPreference << ".root";
+    qa.Finish(ossQA.str());
+    cve.Finish(ossCVE.str());
     if (writer) writer->Close();
 
     return 0;

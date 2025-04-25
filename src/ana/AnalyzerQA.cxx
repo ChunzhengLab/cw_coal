@@ -7,9 +7,11 @@
 #include "ana/AnalyzerQA.h"
 #include "TFile.h"
 #include "TH1D.h"
+#include "TProfile.h"
 #include <cmath>
 #include "TDatabasePDG.h"
 #include "TParticlePDG.h"
+#include <iostream>
 
 AnalyzerQA::AnalyzerQA()
   : hPt_b(nullptr), hPt_ab(nullptr), hPt_m(nullptr),
@@ -17,7 +19,8 @@ AnalyzerQA::AnalyzerQA()
     hPhiM_b(nullptr), hPhiM_ab(nullptr), hPhiM_m(nullptr),
     hPhiP_b(nullptr), hPhiP_ab(nullptr), hPhiP_m(nullptr)
   , hPIDUnsort(nullptr), hPID(nullptr), hPIDName(nullptr)
-  , hRatio(nullptr) {}
+  , hRatio(nullptr)
+  , hAfterBurnedFlagRatio(nullptr) {}
 
 AnalyzerQA::~AnalyzerQA() {
     // Histograms and profiles are owned by ROOT; do not delete here to avoid double-free.
@@ -49,7 +52,7 @@ void AnalyzerQA::Init() {
     hPIDUnsort = new TH1D("hPIDUnsort", "Unsorted Hadron PID labels;PID;Counts", 1, 0, 0);
 
     // Ratio histogram
-    hRatio = new TH1D("hRatio", "Hadron Ratios;Ratio;Value", 7, 0.5, 7.5);
+    hRatio = new TH1D("hRatio", "Hadron Ratios;;Value", 7, 0.5, 7.5);
     {
       auto* ax = hRatio->GetXaxis();
       ax->SetBinLabel(1, "(#bar{B}+B)/M");
@@ -60,9 +63,19 @@ void AnalyzerQA::Init() {
       ax->SetBinLabel(6, "K^{+}/#pi^{+}");
       ax->SetBinLabel(7, "#rho^{+}/#pi^{+}");
     }
+    hAfterBurnedFlagRatio = new TProfile("hAfterBurnedFlagRatio", "After Burned Particles", 3, 0.5, 3.5);
+    {
+      auto* ax = hAfterBurnedFlagRatio->GetXaxis();
+      ax->SetBinLabel(1, "AfterBurned Particles / Total Particles");
+      ax->SetBinLabel(2, "AfterBurned Mesons / Total Mesons");
+      ax->SetBinLabel(3, "AfterBurned Baryons / Total Baryons");
+    }
+
 }
 
 void AnalyzerQA::Process(const Event& evt) {
+    int nAfterBurnedBaryons{0}, nAfterBurnedMesons{0};
+    int nBaryons{0}, nMesons{0};
     for (auto* h : evt.GetHadrons()) {
         double px = h->Px(), py = h->Py(), pz = h->Pz();
         double x  = h->X(),  y  = h->Y();
@@ -75,12 +88,18 @@ void AnalyzerQA::Process(const Event& evt) {
         if      (bn > 0) {
             hPt_b->Fill(pt);  hEta_b->Fill(eta);
             hPhiM_b->Fill(phi_m); hPhiP_b->Fill(phi_p);
+            nBaryons++;
+            if(h->IsAfterBurned()) {nAfterBurnedBaryons++;}
         } else if (bn < 0) {
             hPt_ab->Fill(pt); hEta_ab->Fill(eta);
             hPhiM_ab->Fill(phi_m); hPhiP_ab->Fill(phi_p);
+            nBaryons++;
+            if(h->IsAfterBurned()) {nAfterBurnedBaryons++;}
         } else {
             hPt_m->Fill(pt);  hEta_m->Fill(eta);
             hPhiM_m->Fill(phi_m); hPhiP_m->Fill(phi_p);
+            nMesons++;
+            if(h->IsAfterBurned()) {nAfterBurnedMesons++;}
         }
     }
 
@@ -90,6 +109,14 @@ void AnalyzerQA::Process(const Event& evt) {
         std::string pidLabel = std::to_string(pid);
         hPIDUnsort->Fill(pidLabel.c_str(), 1.0);
     }
+
+    // Fill afterburned ratios with integer bin indices
+    if ((nBaryons + nMesons) > 0)
+        hAfterBurnedFlagRatio -> Fill(1, (double)(nAfterBurnedBaryons + nAfterBurnedMesons) / (nBaryons + nMesons));
+    if (nBaryons > 0)
+        hAfterBurnedFlagRatio -> Fill(2, (double)nAfterBurnedBaryons / nBaryons);
+    if (nMesons > 0)
+        hAfterBurnedFlagRatio -> Fill(3, (double)nAfterBurnedMesons / nMesons);
 }
 
 void AnalyzerQA::Finish(const std::string& outFileName) {
@@ -98,6 +125,7 @@ void AnalyzerQA::Finish(const std::string& outFileName) {
     hEta_b->Write();  hEta_ab->Write();  hEta_m->Write();
     hPhiM_b->Write(); hPhiM_ab->Write(); hPhiM_m->Write();
     hPhiP_b->Write(); hPhiP_ab->Write(); hPhiP_m->Write();
+    hAfterBurnedFlagRatio -> Write();
 
     // Prepare PID counts for sorting
     int nbins = hPIDUnsort->GetNbinsX();
