@@ -2,6 +2,7 @@
 #include "core/Event.h"
 #include "io/EventReaderAMPT.h"
 #include "io/EventRandomGen.h"
+using SamplingMode = EventRandomGen::SamplingMode;
 #include "io/EventWriter.h"
 #include "ana/AnalyzerQA.h"
 #include "ana/AnalyzerCVE.h"
@@ -23,21 +24,25 @@ static void PrintUsage() {
               << "  -a, --algorithm <name>   Combiner algorithm: KDTreeGlobal, KDTreeGreedy, BruteForceGlobal, BruteForceGreedy (default: KDTreeGlobal)\n"
               << "  -n, --events <N>         Number of events to process/generate (if omitted, process all events)\n"
               << "  -b, --bn <B>             Target total baryon number per event (default: 0)\n"
+              << "  -p, --partons <P>        Number of partons per event (-1 to sample from histogram)\n"
               << "  -s, --savedir <dir>      Output directory for all files (default: current working directory)\n"
               << "  -r, --baryon-preference <R>  Baryon preference factor (default: 1.0)\n"
-              << "  -F, --shuffle-fraction <F>   Shuffle fraction of parton positions (0.0–1.0, default: 0.0)\n";
+              << "  -F, --shuffle-fraction <F>   Shuffle fraction of parton positions (0.0–1.0, default: 0.0)\n"
+              << "  -T, --toymode            Use Toy event generation mode (uniform disk + simple pT)\n";
 }
 
 int main(int argc, char** argv) {
     // Variables for input and output file management
     std::string dataInput;
-    std::string dataOutput = "output.root";
+    std::string dataOutput = "dataCoal.root";
     std::string algorithm = "KDTreeGlobal";
     std::string saveDir = "."; // Output directory for all files
     int nEvents = 10;
     int sumBn = 0;
+    int partonCount = -1; // number of partons per event (-1 to sample from histogram)
     double baryonPreference = 1.0;
     bool eventsLimited = false;
+    bool toyMode = false;
 
     // Shuffle feature
     double shuffleFraction = -1;
@@ -49,14 +54,16 @@ int main(int argc, char** argv) {
         {"algorithm", required_argument, nullptr, 'a'},
         {"events",    required_argument, nullptr, 'n'},
         {"bn",        required_argument, nullptr, 'b'},
+        {"partons",   required_argument, nullptr, 'p'},
         {"savedir",   required_argument, nullptr, 's'},
         {"baryon-preference", required_argument, nullptr, 'r'},
         {"shuffle-fraction", required_argument, nullptr, 'F'},
+        {"toymode",  no_argument,       nullptr, 'T'},
         {nullptr,     0,                 nullptr,  0 }
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "h:i:o:a:n:b:s:r:F:", longOpts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "h:i:o:a:n:b:s:r:F:p:T", longOpts, nullptr)) != -1) {
         switch (opt) {
             case 'h': PrintUsage(); return 0;
             case 'i': dataInput = optarg; break;
@@ -64,9 +71,11 @@ int main(int argc, char** argv) {
             case 'a': algorithm = optarg; break;
             case 'n': nEvents = std::stoi(optarg); eventsLimited = true; break;
             case 'b': sumBn = std::stoi(optarg); break;
+            case 'p': partonCount = std::stoi(optarg); break;
             case 's': saveDir = optarg; break;
             case 'r': baryonPreference = std::stod(optarg); break;
             case 'F': shuffleFraction = std::stod(optarg); break;
+            case 'T': toyMode = true; break;
             default:  PrintUsage(); return 1;
         }
     }
@@ -119,9 +128,15 @@ int main(int argc, char** argv) {
         }
         fetch = [reader](Event& e) { return reader->NextEvent(e); };
     } else {
-        std::cout << ">>>Number of events to process: " << nEvents << std::endl;
         auto gen = std::make_shared<EventRandomGen>();
-        fetch = [gen](Event& e) { e = gen->GenerateEvent(-1, 0); return true; };
+        // Determine sampling mode
+        SamplingMode mode = toyMode ? SamplingMode::kToyMode
+                                    : SamplingMode::kSampleFromFile;
+        // Single lambda for both modes
+        fetch = [gen, sumBn, mode, partonCount](Event& e) {
+            e = gen->GenerateEvent(partonCount, sumBn, mode);
+            return true;
+        };
     }
 
     std::cout << ">>>Baryon preference factor: " << baryonPreference << std::endl;
