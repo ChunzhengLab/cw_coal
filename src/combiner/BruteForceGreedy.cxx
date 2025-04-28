@@ -1,6 +1,7 @@
 #include "Combiners.h"
 #include <algorithm>
 #include <cmath>
+#include <random>
 
 class PartonNeighborSearcherBrute {
 public:
@@ -14,8 +15,13 @@ std::vector<Hadron*> BruteForceGreedy::Combine(const std::vector<Parton*>& parto
   std::vector<Hadron*> hadrons;
   PartonNeighborSearcherBrute searcher(partons);
 
+  // Baryon preference factor m_r: controls probability to reject meson
+  static std::mt19937 gen(std::random_device{}());
+  std::bernoulli_distribution rejectMesonDist(m_r / (1.0 + m_r));
+
   for (auto* a : partons) {
     if (a->IsUsed()) continue;
+    bool matched = false;
 
     auto neighbors = searcher.nearestNeighbors(a);
     for (auto& [b, dist] : neighbors) {
@@ -23,13 +29,30 @@ std::vector<Hadron*> BruteForceGreedy::Combine(const std::vector<Parton*>& parto
 
       int sum = std::round(a->GetBaryonNumber() + b->GetBaryonNumber());
       if (sum == 0) {
-        auto* h = new Hadron(
-          (a->X() + b->X()) / 2, (a->Y() + b->Y()) / 2, (a->Z() + b->Z()) / 2,
-          a->Px() + b->Px(), a->Py() + b->Py(), a->Pz() + b->Pz(),
-          sum, a->DistanceTo(*b)
-        );
+        // Probabilistically reject some meson combinations based on m_r
+        if (rejectMesonDist(gen)) {
+          continue;  // skip this meson pairing
+        }
+        // Kinematic calculation
+        double x_mid = (a->X() + b->X()) / 2;
+        double y_mid = (a->Y() + b->Y()) / 2;
+        double z_mid = (a->Z() + b->Z()) / 2;
+        double px = a->Px() + b->Px();
+        double py = a->Py() + b->Py();
+        double pz = a->Pz() + b->Pz();
+        double m1 = a->GetMassFromPDG();
+        double m2 = b->GetMassFromPDG();
+        double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1 * m1);
+        double E2 = std::sqrt(b->Px()*b->Px() + b->Py()*b->Py() + b->Pz()*b->Pz() + m2 * m2);
+        double E_sum = E1 + E2;
+        double invMass = std::sqrt(std::max(0.0, E_sum * E_sum - (px*px + py*py + pz*pz)));
+        auto* h = new Hadron(x_mid, y_mid, z_mid, px, py, pz, sum, dist);
+        h->SetMass(invMass);
+        h->AddConstituentID(a->UniqueID());
+        h->AddConstituentID(b->UniqueID());
         hadrons.push_back(h);
         a->MarkUsed(); b->MarkUsed();
+        matched = true;
         break;
       }
 
@@ -38,18 +61,38 @@ std::vector<Hadron*> BruteForceGreedy::Combine(const std::vector<Parton*>& parto
         double baryonSum = a->GetBaryonNumber() + b->GetBaryonNumber() + c->GetBaryonNumber();
         if (std::round(baryonSum) != 1 && std::round(baryonSum) != -1) continue;
 
-        auto* h = new Hadron(
-          (a->X() + b->X() + c->X()) / 3, (a->Y() + b->Y() + c->Y()) / 3, (a->Z() + b->Z() + c->Z()) / 3,
-          a->Px() + b->Px() + c->Px(), a->Py() + b->Py() + c->Py(), a->Pz() + b->Pz() + c->Pz(),
-          std::round(baryonSum),
-          a->DistanceTo(*b) + a->DistanceTo(*c) + b->DistanceTo(*c)
-        );
+        // formation distance for baryon
+        double formationDist = a->DistanceTo(*b) + a->DistanceTo(*c) + b->DistanceTo(*c);
+
+        // Kinematic calculation for baryon
+        double x_mid = (a->X() + b->X() + c->X()) / 3;
+        double y_mid = (a->Y() + b->Y() + c->Y()) / 3;
+        double z_mid = (a->Z() + b->Z() + c->Z()) / 3;
+        double px = a->Px() + b->Px() + c->Px();
+        double py = a->Py() + b->Py() + c->Py();
+        double pz = a->Pz() + b->Pz() + c->Pz();
+        double m1 = a->GetMassFromPDG();
+        double m2 = b->GetMassFromPDG();
+        double m3 = c->GetMassFromPDG();
+        double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1*m1);
+        double E2 = std::sqrt(b->Px()*b->Px() + b->Py()*b->Py() + b->Pz()*b->Pz() + m2*m2);
+        double E3 = std::sqrt(c->Px()*c->Px() + c->Py()*c->Py() + c->Pz()*c->Pz() + m3*m3);
+        double E_sum = E1 + E2 + E3;
+        double invMass = std::sqrt(std::max(0.0, E_sum*E_sum - (px*px + py*py + pz*pz)));
+        auto* h = new Hadron(x_mid, y_mid, z_mid, px, py, pz, std::round(baryonSum), formationDist);
+        h->SetMass(invMass);
+        h->AddConstituentID(a->UniqueID());
+        h->AddConstituentID(b->UniqueID());
+        h->AddConstituentID(c->UniqueID());
         hadrons.push_back(h);
         a->MarkUsed(); b->MarkUsed(); c->MarkUsed();
-        goto next_parton;
+        matched = true;
+        break;  // break out of c-loop
+      }
+      if (matched) {
+          break;  // break out of b-loop
       }
     }
-  next_parton:;
   }
 
   auto afterburned = Afterburner(partons);

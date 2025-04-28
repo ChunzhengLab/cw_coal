@@ -7,6 +7,9 @@
 #include "TH1D.h"
 #include "TH2D.h"
 #include <cmath>
+#include <vector>
+#include <utility>
+#include "PhysicsConstants.h"
 
 ClassImp(Particle)
 ClassImp(Parton)
@@ -46,7 +49,21 @@ Parton* Parton::Random(TRandom3* rng) {
     // Baryon number: ±1/3 randomly
     double baryonNumber = (rng->Rndm() < 0.5) ? +1.0/3.0 : -1.0/3.0;
 
-    return new Parton(x, y, z, px, py, pz, baryonNumber);
+    // Create the parton
+    Parton* p = new Parton(x, y, z, px, py, pz, baryonNumber);
+    // Sample PID based on predefined weighted distribution
+    const auto& pid_weights = PhysicsConstants::GetPartonPIDWeights();
+    double total_weight = 0;
+    for (const auto &pw : pid_weights) total_weight += pw.second;
+    double r1 = rng->Rndm() * total_weight;
+    for (const auto &pw : pid_weights) {
+        if (r1 < pw.second) {
+            p->SetPID(pw.first);
+            break;
+        }
+        r1 -= pw.second;
+    }
+    return p;
 }
 
 Parton* Parton::RandomFromHists(const char* filename, TRandom3* rng) {
@@ -80,6 +97,19 @@ Parton* Parton::RandomFromHists(const char* filename, TRandom3* rng) {
   hPxPy->GetRandom2(px, py);
   // Assign baryon number randomly
   double baryonNumber = rng->Rndm() < 0.5 ? +1.0/3.0 : -1.0/3.0;
-  // Create and return new Parton
-  return new Parton(x, y, z, px, py, pz, baryonNumber);
+  // Create the parton
+  Parton* p = new Parton(x, y, z, px, py, pz, baryonNumber);
+  // Sample PID based on predefined weighted distribution
+  const auto& pid_weights = PhysicsConstants::GetPartonPIDWeights();
+  double total_weight = 0;
+  for (const auto &pw : pid_weights) total_weight += pw.second;
+  double r1 = rng->Rndm() * total_weight;
+  for (const auto &pw : pid_weights) {
+      if (r1 < pw.second) {
+          p->SetPID(pw.first);
+          break;
+      }
+      r1 -= pw.second;
+  }
+  return p;
 }

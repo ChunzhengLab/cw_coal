@@ -20,7 +20,11 @@ AnalyzerQA::AnalyzerQA()
     hPhiP_b(nullptr), hPhiP_ab(nullptr), hPhiP_m(nullptr)
   , hPIDUnsort(nullptr), hPID(nullptr), hPIDName(nullptr)
   , hRatio(nullptr)
-  , hAfterBurnedFlagRatio(nullptr) {}
+  , hAfterBurnedFlagRatio(nullptr)
+  , m_nBaryonCount(0), m_nAntiBaryonCount(0), m_nMesonCount(0)
+  , m_nProtonCount(0), m_nAntiProtonCount(0), m_nLambdaCount(0)
+  , m_nKaonPlusCount(0), m_nRhoPlusCount(0), m_nPionPlusCount(0)
+{}
 
 AnalyzerQA::~AnalyzerQA() {
     // Histograms and profiles are owned by ROOT; do not delete here to avoid double-free.
@@ -89,23 +93,33 @@ void AnalyzerQA::Process(const Event& evt) {
             hPt_b->Fill(pt);  hEta_b->Fill(eta);
             hPhiM_b->Fill(phi_m); hPhiP_b->Fill(phi_p);
             nBaryons++;
+            m_nBaryonCount++;
             if(h->IsAfterBurned()) {nAfterBurnedBaryons++;}
         } else if (bn < 0) {
             hPt_ab->Fill(pt); hEta_ab->Fill(eta);
             hPhiM_ab->Fill(phi_m); hPhiP_ab->Fill(phi_p);
             nBaryons++;
+            m_nAntiBaryonCount++;
             if(h->IsAfterBurned()) {nAfterBurnedBaryons++;}
         } else {
             hPt_m->Fill(pt);  hEta_m->Fill(eta);
             hPhiM_m->Fill(phi_m); hPhiP_m->Fill(phi_p);
             nMesons++;
+            m_nMesonCount++;
             if(h->IsAfterBurned()) {nAfterBurnedMesons++;}
         }
-    }
-
-    // Fill PID histogram
-    for (auto* hadron : evt.GetHadrons()) {
-        int pid = hadron->GetPID();
+        // Also update specific hadron species counters based on PID
+        int pid = h->GetPID();
+        switch (pid) {
+            case 2212:   ++m_nProtonCount;     break;
+            case -2212:  ++m_nAntiProtonCount; break;
+            case 3122:   ++m_nLambdaCount;     break;
+            case 321:    ++m_nKaonPlusCount;   break;
+            case 213:    ++m_nRhoPlusCount;    break;
+            case 211:    ++m_nPionPlusCount;   break;
+            default:     break;
+        }
+        // Also fill unsorted PID histogram using the existing pid variable
         std::string pidLabel = std::to_string(pid);
         hPIDUnsort->Fill(pidLabel.c_str(), 1.0);
     }
@@ -127,41 +141,61 @@ void AnalyzerQA::Finish(const std::string& outFileName) {
     hPhiP_b->Write(); hPhiP_ab->Write(); hPhiP_m->Write();
     hAfterBurnedFlagRatio -> Write();
 
-    // Initialize counters
-    double nBaryon = 0, nAntiBaryon = 0, nMeson = 0;
-    double nProton = 0, nAntiProton = 0, nLambda = 0, nKaonPlus = 0, nRhoPlus = 0, nPionPlus = 0;
-
-    // Extract counts from PID histogram
+    // Prepare PID counts for sorting
     int nbins = hPIDUnsort->GetNbinsX();
+    std::vector<std::pair<int,double>> pidCounts;
+    pidCounts.reserve(nbins);
     for (int ib = 1; ib <= nbins; ++ib) {
         const char* lbl = hPIDUnsort->GetXaxis()->GetBinLabel(ib);
-        if (!lbl || !*lbl) continue;
+        if (!lbl || lbl[0]=='\0') continue;
         int pid = std::stoi(lbl);
         double cnt = hPIDUnsort->GetBinContent(ib);
         if (cnt <= 0) continue;
-        if      (pid == 2212)   nProton     = cnt;
-        else if (pid == -2212)  nAntiProton = cnt;
-        else if (pid == 3122)   nLambda     = cnt;
-        else if (pid == 321)    nKaonPlus   = cnt;
-        else if (pid == 213)    nRhoPlus    = cnt;
-        else if (pid == 211)    nPionPlus   = cnt;
+        pidCounts.emplace_back(pid, cnt);
     }
+    // Sort by count descending
+    std::sort(pidCounts.begin(), pidCounts.end(),
+              [](auto &a, auto &b){ return a.second > b.second; });
 
-    // Count baryons, anti-baryons, and mesons by histogram entries
-    nBaryon     = hPt_b->GetEntries();
-    nAntiBaryon = hPt_ab->GetEntries();
-    nMeson      = hPt_m->GetEntries();
-
-    // Fill ratio bins
-    if (nMeson > 0)      hRatio->SetBinContent(1, (nAntiBaryon + nBaryon) / nMeson);
-    if (nBaryon > 0)     hRatio->SetBinContent(2, nAntiBaryon / nBaryon);
-    if (nPionPlus > 0) {
-      hRatio->SetBinContent(3, nProton     / nPionPlus);
-      hRatio->SetBinContent(6, nKaonPlus   / nPionPlus);
-      hRatio->SetBinContent(7, nRhoPlus    / nPionPlus);
+    // 1) Histogram sorted by count with PID labels
+    hPID = new TH1D("hPID", "PID Sorted by Count;PID;Counts",
+                    pidCounts.size(), 0.5, pidCounts.size()+0.5);
+    for (size_t i = 0; i < pidCounts.size(); ++i) {
+        int pid = pidCounts[i].first;
+        double cnt = pidCounts[i].second;
+        hPID->SetBinContent(i+1, cnt);
+        hPID->GetXaxis()->SetBinLabel(i+1, Form("%d", pid));
     }
-    if (nProton > 0)     hRatio->SetBinContent(4, nAntiProton / nProton);
-    if (nProton > 0)     hRatio->SetBinContent(5, nLambda     / nProton);
+    hPID->Write();
+
+    // 2) Histogram sorted by count with particle names
+    TDatabasePDG* pdgDB = TDatabasePDG::Instance();
+    hPIDName = new TH1D("hPIDName", "PID Sorted by Count with Names;Name;Counts",
+                        pidCounts.size(), 0.5, pidCounts.size()+0.5);
+    for (size_t i = 0; i < pidCounts.size(); ++i) {
+        int pid = pidCounts[i].first;
+        double cnt = pidCounts[i].second;
+        TParticlePDG* part = pdgDB->GetParticle(pid);
+        const char* name = part ? part->GetName() : "Unknown";
+        hPIDName->SetBinContent(i+1, cnt);
+        hPIDName->GetXaxis()->SetBinLabel(i+1, name);
+    }
+    hPIDName->Write();
+
+    // Compute and write ratio histogram from accumulated counters
+    if (m_nMesonCount > 0)
+        hRatio->SetBinContent(1, (m_nBaryonCount + m_nAntiBaryonCount) / m_nMesonCount);
+    if (m_nBaryonCount > 0)
+        hRatio->SetBinContent(2, m_nAntiBaryonCount / m_nBaryonCount);
+    if (m_nPionPlusCount > 0) {
+        hRatio->SetBinContent(3, m_nProtonCount / m_nPionPlusCount);
+        hRatio->SetBinContent(6, m_nKaonPlusCount / m_nPionPlusCount);
+        hRatio->SetBinContent(7, m_nRhoPlusCount / m_nPionPlusCount);
+    }
+    if (m_nProtonCount > 0)
+        hRatio->SetBinContent(4, m_nAntiProtonCount / m_nProtonCount);
+    if (m_nProtonCount > 0)
+        hRatio->SetBinContent(5, m_nLambdaCount / m_nProtonCount);
     hRatio->Write();
 
     outFile.Close();

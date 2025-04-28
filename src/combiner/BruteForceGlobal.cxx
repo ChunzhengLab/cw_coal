@@ -1,6 +1,7 @@
 #include "Combiners.h"
 #include <cmath>
 #include <unordered_set>
+#include <algorithm>
 
 struct Candidate {
     double distance;
@@ -66,9 +67,30 @@ std::vector<Hadron*> BruteForceGlobal::Combine(const std::vector<Parton*>& parto
             double x = (a->X() + b->X() + c->X()) / 3;
             double y = (a->Y() + b->Y() + c->Y()) / 3;
             double z = (a->Z() + b->Z() + c->Z()) / 3;
-            double formation = a->DistanceTo(*b) + a->DistanceTo(*c) + b->DistanceTo(*c);
 
-            Hadron* h = new Hadron(x, y, z, px, py, pz, std::round(bn), formation);
+            double m1 = partons[candi.idxA]->GetMassFromPDG();
+            double m2 = partons[candi.idxB]->GetMassFromPDG();
+            double m3 = partons[candi.idxC]->GetMassFromPDG();
+            double E1 = std::sqrt(partons[candi.idxA]->Px()*partons[candi.idxA]->Px()
+                        + partons[candi.idxA]->Py()*partons[candi.idxA]->Py()
+                        + partons[candi.idxA]->Pz()*partons[candi.idxA]->Pz()
+                        + m1*m1);
+            double E2 = std::sqrt(partons[candi.idxB]->Px()*partons[candi.idxB]->Px()
+                        + partons[candi.idxB]->Py()*partons[candi.idxB]->Py()
+                        + partons[candi.idxB]->Pz()*partons[candi.idxB]->Pz()
+                        + m2*m2);
+            double E3 = std::sqrt(partons[candi.idxC]->Px()*partons[candi.idxC]->Px()
+                        + partons[candi.idxC]->Py()*partons[candi.idxC]->Py()
+                        + partons[candi.idxC]->Pz()*partons[candi.idxC]->Pz()
+                        + m3*m3);
+            double E_sum = E1 + E2 + E3;
+            double invMass = std::sqrt(std::max(0.0, E_sum*E_sum - (px*px + py*py + pz*pz)));
+
+            double rawDist = a->DistanceTo(*b) 
+                           + a->DistanceTo(*c) 
+                           + b->DistanceTo(*c);
+            auto* h = new Hadron(x, y, z, px, py, pz, std::round(bn), rawDist);
+            h->SetMass(invMass);
             h->AddConstituentID(a->UniqueID());
             h->AddConstituentID(b->UniqueID());
             h->AddConstituentID(c->UniqueID());
@@ -84,9 +106,23 @@ std::vector<Hadron*> BruteForceGlobal::Combine(const std::vector<Parton*>& parto
             double x = (a->X() + b->X()) / 2;
             double y = (a->Y() + b->Y()) / 2;
             double z = (a->Z() + b->Z()) / 2;
-            double formation = a->DistanceTo(*b);
 
-            Hadron* h = new Hadron(x, y, z, px, py, pz, 0, formation);
+            double m1 = partons[candi.idxA]->GetMassFromPDG();
+            double m2 = partons[candi.idxB]->GetMassFromPDG();
+            double E1 = std::sqrt(partons[candi.idxA]->Px()*partons[candi.idxA]->Px()
+                        + partons[candi.idxA]->Py()*partons[candi.idxA]->Py()
+                        + partons[candi.idxA]->Pz()*partons[candi.idxA]->Pz()
+                        + m1*m1);
+            double E2 = std::sqrt(partons[candi.idxB]->Px()*partons[candi.idxB]->Px()
+                        + partons[candi.idxB]->Py()*partons[candi.idxB]->Py()
+                        + partons[candi.idxB]->Pz()*partons[candi.idxB]->Pz()
+                        + m2*m2);
+            double E_sum = E1 + E2;
+            double invMass = std::sqrt(std::max(0.0, E_sum*E_sum - (px*px + py*py + pz*pz)));
+
+            double rawDist = a->DistanceTo(*b);
+            auto* h = new Hadron(x, y, z, px, py, pz, 0, rawDist);
+            h->SetMass(invMass);
             h->AddConstituentID(a->UniqueID());
             h->AddConstituentID(b->UniqueID());
             hadrons.push_back(h);

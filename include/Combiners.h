@@ -16,7 +16,7 @@ private:
 
 class BruteForceGreedy : public CombinerBase {
 public:
-    explicit BruteForceGreedy(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {}
+    explicit BruteForceGreedy(double baryonPreference = 1.0) : m_r(baryonPreference) {}
     std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
 private:
@@ -43,7 +43,7 @@ private:
 
 class KDTreeGreedy : public CombinerBase {
 public:
-    explicit KDTreeGreedy(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {}
+    explicit KDTreeGreedy(double baryonPreference = 1.0) : m_r(baryonPreference) {}
     std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
 private:
@@ -52,7 +52,7 @@ private:
 
 class KDTreeDualGreedy : public CombinerBase {
 public:
-    explicit KDTreeDualGreedy(double baryonPreference = 1.0) : m_r(2 * baryonPreference) {}
+    explicit KDTreeDualGreedy(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {}
     std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
 private:

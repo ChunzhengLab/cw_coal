@@ -192,6 +192,21 @@ inline const TH1I& GetMultiplicityHistogram() {
     return mult;
 }
 
+//----------------------------------------------------------------------------//
+// PID weight distribution for Parton sampling: {pid, weight}
+// Approximate relative parton PID weights:
+// Based on scaled input numbers
+inline const std::vector<std::pair<int,double>>& GetPartonPIDWeights() {
+    static const std::vector<std::pair<int,double>> pid_weights = {
+        {-3, 3},  /* sbar: strange antiquark */
+        {-2, 10}, /* dbar: down antiquark */
+        {-1, 10}, /* ubar: up antiquark */
+        { 1, 10}, /* u: up quark */
+        { 2, 10}, /* d: down quark */
+        { 3, 3},  /* s: strange quark */
+    };
+    return pid_weights;
+}
 
 } // namespace PhysicsConstants
 

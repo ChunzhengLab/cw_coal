@@ -48,7 +48,19 @@ std::vector<Hadron*> BruteForceDualGreedy::Combine(const std::vector<Parton*>& p
       double px = a->Px() + closestOpp->Px();
       double py = a->Py() + closestOpp->Py();
       double pz = a->Pz() + closestOpp->Pz();
+
+      // Kinematic calculation for meson
+      double m1 = a->GetMassFromPDG();
+      double m2 = closestOpp->GetMassFromPDG();
+      double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1*m1);
+      double E2 = std::sqrt(closestOpp->Px()*closestOpp->Px()
+                  + closestOpp->Py()*closestOpp->Py()
+                  + closestOpp->Pz()*closestOpp->Pz() + m2*m2);
+      double E_sum = E1 + E2;
+      double invMass = std::sqrt(std::max(0.0, E_sum*E_sum - (px*px + py*py + pz*pz)));
+
       Hadron* h = new Hadron(x, y, z, px, py, pz, 0, closestOppDist);
+      h->SetMass(invMass);
       h->AddConstituentID(a->UniqueID());
       h->AddConstituentID(closestOpp->UniqueID());
       hadrons.push_back(h);
@@ -61,7 +73,26 @@ std::vector<Hadron*> BruteForceDualGreedy::Combine(const std::vector<Parton*>& p
       double py = a->Py() + closestSame1->Py() + closestSame2->Py();
       double pz = a->Pz() + closestSame1->Pz() + closestSame2->Pz();
       int baryonNumber = std::round(a->GetBaryonNumber() + closestSame1->GetBaryonNumber() + closestSame2->GetBaryonNumber());
-      Hadron* h = new Hadron(x, y, z, px, py, pz, baryonNumber, bestTripletDist);
+
+      // formation distance for baryon
+      double formationDist = bestTripletDist;
+
+      // Kinematic calculation for baryon
+      double m1 = a->GetMassFromPDG();
+      double m2 = closestSame1->GetMassFromPDG();
+      double m3 = closestSame2->GetMassFromPDG();
+      double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1*m1);
+      double E2 = std::sqrt(closestSame1->Px()*closestSame1->Px()
+                  + closestSame1->Py()*closestSame1->Py()
+                  + closestSame1->Pz()*closestSame1->Pz() + m2*m2);
+      double E3 = std::sqrt(closestSame2->Px()*closestSame2->Px()
+                  + closestSame2->Py()*closestSame2->Py()
+                  + closestSame2->Pz()*closestSame2->Pz() + m3*m3);
+      double E_sum = E1 + E2 + E3;
+      double invMass = std::sqrt(std::max(0.0, E_sum*E_sum - (px*px + py*py + pz*pz)));
+
+      Hadron* h = new Hadron(x, y, z, px, py, pz, baryonNumber, formationDist);
+      h->SetMass(invMass);
       h->AddConstituentID(a->UniqueID());
       h->AddConstituentID(closestSame1->UniqueID());
       h->AddConstituentID(closestSame2->UniqueID());

@@ -64,6 +64,17 @@ private:
     TH1D* hRatio;
 
     TProfile* hAfterBurnedFlagRatio;
+
+    // Global hadron counters, updated in Process()
+    double m_nBaryonCount;
+    double m_nAntiBaryonCount;
+    double m_nMesonCount;
+    double m_nProtonCount;
+    double m_nAntiProtonCount;
+    double m_nLambdaCount;
+    double m_nKaonPlusCount;
+    double m_nRhoPlusCount;
+    double m_nPionPlusCount;
 };
 
 #endif // ANALYZERQA_H

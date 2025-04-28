@@ -1,11 +1,17 @@
-
 #include "Particle.h"
 #include <vector>
 #include <nanoflann.hpp>
 #include "Combiners.h"
 #include "core/PartonKDTree.h"
+#include <cmath>
+#include <algorithm>
+#include <random>
 
 std::vector<Hadron*> KDTreeGreedy::Combine(const std::vector<Parton*>& partons) {
+  // Baryon preference factor m_r: controls probability to reject meson
+  std::mt19937 gen(std::random_device{}());
+  std::bernoulli_distribution rejectMesonDist(m_r / (1.0 + m_r));
+
   PartonKDTree searcher(partons);
   std::vector<Hadron*> hadrons;
 
@@ -26,9 +32,20 @@ std::vector<Hadron*> KDTreeGreedy::Combine(const std::vector<Parton*>& partons) 
       double x = (a->X() + b->X()) / 2;
       double y = (a->Y() + b->Y()) / 2;
       double z = (a->Z() + b->Z()) / 2;
-      double formation = dist;
+      // Kinematic calculation for meson
+      double m1 = a->GetMassFromPDG();
+      double m2 = b->GetMassFromPDG();
+      double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1*m1);
+      double E2 = std::sqrt(b->Px()*b->Px() + b->Py()*b->Py() + b->Pz()*b->Pz() + m2*m2);
+      double E_sum = E1 + E2;
+      double invMass = std::sqrt(std::max(0.0, E_sum*E_sum - (px*px + py*py + pz*pz)));
 
-      auto h = new Hadron(x, y, z, px, py, pz, 0, formation);
+      if (rejectMesonDist(gen)) {
+        continue;  // probabilistically reject this meson
+      }
+
+      auto* h = new Hadron(x, y, z, px, py, pz, 0, dist);
+      h->SetMass(invMass);
       h->AddConstituentID(a->UniqueID());
       h->AddConstituentID(b->UniqueID());
       hadrons.push_back(h);
@@ -56,7 +73,8 @@ std::vector<Hadron*> KDTreeGreedy::Combine(const std::vector<Parton*>& partons) 
         if (std::round(baryonSum) != 1 && std::round(baryonSum) != -1) continue;
 
         double dist = a->DistanceTo(*b) + a->DistanceTo(*c) + b->DistanceTo(*c);
-        dist = dist / m_r;
+        // No normalization: use raw sum of three edges
+        // dist = dist / m_r;
 
         double px = a->Px() + b->Px() + c->Px();
         double py = a->Py() + b->Py() + c->Py();
@@ -65,7 +83,18 @@ std::vector<Hadron*> KDTreeGreedy::Combine(const std::vector<Parton*>& partons) 
         double y = (a->Y() + b->Y() + c->Y()) / 3;
         double z = (a->Z() + b->Z() + c->Z()) / 3;
 
-        auto h = new Hadron(x, y, z, px, py, pz, std::round(baryonSum), dist);
+        // Kinematic calculation for baryon
+        double m1 = a->GetMassFromPDG();
+        double m2 = b->GetMassFromPDG();
+        double m3 = c->GetMassFromPDG();
+        double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1*m1);
+        double E2 = std::sqrt(b->Px()*b->Px() + b->Py()*b->Py() + b->Pz()*b->Pz() + m2*m2);
+        double E3 = std::sqrt(c->Px()*c->Px() + c->Py()*c->Py() + c->Pz()*c->Pz() + m3*m3);
+        double E_sum = E1 + E2 + E3;
+        double invMass = std::sqrt(std::max(0.0, E_sum*E_sum - (px*px + py*py + pz*pz)));
+
+        auto* h = new Hadron(x, y, z, px, py, pz, std::round(baryonSum), dist);
+        h->SetMass(invMass);
         h->AddConstituentID(a->UniqueID());
         h->AddConstituentID(b->UniqueID());
         h->AddConstituentID(c->UniqueID());
