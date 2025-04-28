@@ -2,7 +2,6 @@
 #include "core/Event.h"
 #include "io/EventReaderAMPT.h"
 #include "io/EventRandomGen.h"
-using SamplingMode = EventRandomGen::SamplingMode;
 #include "io/EventWriter.h"
 #include "ana/AnalyzerQA.h"
 #include "ana/AnalyzerCVE.h"
@@ -16,11 +15,13 @@ using SamplingMode = EventRandomGen::SamplingMode;
 #include <sstream>
 #include <iomanip>
 
+using SamplingMode = EventRandomGen::SamplingMode;
+
 static void PrintUsage() {
     std::cout << "Usage: cwcoal [options]\n"
               << "  -h, --help               Show this help message\n"
               << "  -i, --data-input <file>  AMPT input ROOT file or list (if omitted, random generation mode)\n"
-              << "  -o, --data-output <file> Output ROOT file for hadrons (default: output.root)\n"
+              << "  -o, --data-output <file> Output ROOT file for hadrons (if omitted, no output will be written)\n"
               << "  -a, --algorithm <name>   Combiner algorithm: KDTreeGlobal, KDTreeGreedy, BruteForceGlobal, BruteForceGreedy (default: KDTreeGlobal)\n"
               << "  -n, --events <N>         Number of events to process/generate (if omitted, process all events)\n"
               << "  -b, --bn <B>             Target total baryon number per event (default: 0)\n"
@@ -34,7 +35,8 @@ static void PrintUsage() {
 int main(int argc, char** argv) {
     // Variables for input and output file management
     std::string dataInput;
-    std::string dataOutput = "dataCoal.root";
+    std::string dataOutput;
+    bool outputEnabled = false; // Only write events if --data-output is specified
     std::string algorithm = "KDTreeGlobal";
     std::string saveDir = "."; // Output directory for all files
     int nEvents = 10;
@@ -48,26 +50,29 @@ int main(int argc, char** argv) {
     double shuffleFraction = -1;
 
     const struct option longOpts[] = {
-        {"help",      no_argument,       nullptr, 'h'},
-        {"data-input", required_argument, nullptr, 'i'},
-        {"data-output", required_argument, nullptr, 'o'},
-        {"algorithm", required_argument, nullptr, 'a'},
-        {"events",    required_argument, nullptr, 'n'},
-        {"bn",        required_argument, nullptr, 'b'},
-        {"partons",   required_argument, nullptr, 'p'},
-        {"savedir",   required_argument, nullptr, 's'},
+        {"help",              no_argument,       nullptr, 'h'},
+        {"data-input",        required_argument, nullptr, 'i'},
+        {"data-output",       required_argument, nullptr, 'o'},
+        {"algorithm",         required_argument, nullptr, 'a'},
+        {"events",            required_argument, nullptr, 'n'},
+        {"bn",                required_argument, nullptr, 'b'},
+        {"partons",           required_argument, nullptr, 'p'},
+        {"savedir",           required_argument, nullptr, 's'},
         {"baryon-preference", required_argument, nullptr, 'r'},
-        {"shuffle-fraction", required_argument, nullptr, 'F'},
-        {"toymode",  no_argument,       nullptr, 'T'},
-        {nullptr,     0,                 nullptr,  0 }
+        {"shuffle-fraction",  required_argument, nullptr, 'F'},
+        {"toymode",           no_argument,       nullptr, 'T'},
+        {nullptr,             0,                 nullptr,  0 }
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "h:i:o:a:n:b:s:r:F:p:T", longOpts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "hi:o:a:n:b:p:s:r:F:T", longOpts, nullptr)) != -1) {
         switch (opt) {
             case 'h': PrintUsage(); return 0;
             case 'i': dataInput = optarg; break;
-            case 'o': dataOutput = optarg; break;
+            case 'o':
+                dataOutput = optarg;
+                outputEnabled = true;
+                break;
             case 'a': algorithm = optarg; break;
             case 'n': nEvents = std::stoi(optarg); eventsLimited = true; break;
             case 'b': sumBn = std::stoi(optarg); break;
@@ -96,7 +101,10 @@ int main(int argc, char** argv) {
     }
 
     // Initialize writer and analyzers
-    std::unique_ptr<EventWriter> writer = std::make_unique<EventWriter>(saveDir + "/" + dataOutput);
+    std::unique_ptr<EventWriter> writer;
+    if (outputEnabled) {
+        writer = std::make_unique<EventWriter>(saveDir + "/" + dataOutput);
+    }
     AnalyzerQA qa; 
     AnalyzerCVE cve;
     qa.Init();
@@ -182,8 +190,18 @@ int main(int argc, char** argv) {
 
     // Finalize
     std::ostringstream ossQA, ossCVE;
-    ossQA << saveDir << "/qa_" << algorithm << "_r" << std::fixed << std::setprecision(2) << baryonPreference << ".root";
-    ossCVE << saveDir << "/cve_" << algorithm << "_r" << std::fixed << std::setprecision(2) << baryonPreference << ".root";
+    ossQA << saveDir << "/qa_" << algorithm << "_r" << std::fixed << std::setprecision(2) << baryonPreference;
+    ossCVE << saveDir << "/cve_" << algorithm << "_r" << std::fixed << std::setprecision(2) << baryonPreference;
+    if (toyMode) {
+        ossQA << "_n" << nEvents << "_p" << partonCount << "_bn" << sumBn;
+        ossCVE << "_n" << nEvents << "_p" << partonCount << "_bn" << sumBn;
+        if (shuffleFraction >= 0.0) {
+            ossQA << "_sf" << std::fixed << std::setprecision(2) << shuffleFraction;
+            ossCVE << "_sf" << std::fixed << std::setprecision(2) << shuffleFraction;
+        }
+    }
+    ossQA << ".root";
+    ossCVE << ".root";
     qa.Finish(ossQA.str());
     cve.Finish(ossCVE.str());
     if (writer) writer->Close();

@@ -127,73 +127,31 @@ void AnalyzerQA::Finish(const std::string& outFileName) {
     hPhiP_b->Write(); hPhiP_ab->Write(); hPhiP_m->Write();
     hAfterBurnedFlagRatio -> Write();
 
-    // Prepare PID counts for sorting
+    // Initialize counters
+    double nBaryon = 0, nAntiBaryon = 0, nMeson = 0;
+    double nProton = 0, nAntiProton = 0, nLambda = 0, nKaonPlus = 0, nRhoPlus = 0, nPionPlus = 0;
+
+    // Extract counts from PID histogram
     int nbins = hPIDUnsort->GetNbinsX();
-    std::vector<std::pair<int,double>> pidCounts;
-    pidCounts.reserve(nbins);
     for (int ib = 1; ib <= nbins; ++ib) {
         const char* lbl = hPIDUnsort->GetXaxis()->GetBinLabel(ib);
-        if (!lbl || lbl[0]=='\0') continue;
+        if (!lbl || !*lbl) continue;
         int pid = std::stoi(lbl);
         double cnt = hPIDUnsort->GetBinContent(ib);
         if (cnt <= 0) continue;
-        pidCounts.emplace_back(pid, cnt);
+        if      (pid == 2212)   nProton     = cnt;
+        else if (pid == -2212)  nAntiProton = cnt;
+        else if (pid == 3122)   nLambda     = cnt;
+        else if (pid == 321)    nKaonPlus   = cnt;
+        else if (pid == 213)    nRhoPlus    = cnt;
+        else if (pid == 211)    nPionPlus   = cnt;
     }
-    // Sort by count descending
-    std::sort(pidCounts.begin(), pidCounts.end(),
-              [](auto &a, auto &b){ return a.second > b.second; });
 
-    // 1) Histogram sorted by count with PID labels
-    hPID = new TH1D("hPID", "PID Sorted by Count;PID;Counts",
-                    pidCounts.size(), 0.5, pidCounts.size()+0.5);
-    for (size_t i = 0; i < pidCounts.size(); ++i) {
-        int pid = pidCounts[i].first;
-        double cnt = pidCounts[i].second;
-        hPID->SetBinContent(i+1, cnt);
-        hPID->GetXaxis()->SetBinLabel(i+1, Form("%d", pid));
-    }
-    hPID->Write();
+    // Count baryons, anti-baryons, and mesons by histogram entries
+    nBaryon     = hPt_b->GetEntries();
+    nAntiBaryon = hPt_ab->GetEntries();
+    nMeson      = hPt_m->GetEntries();
 
-    // 2) Histogram sorted by count with particle names
-    TDatabasePDG* pdgDB = TDatabasePDG::Instance();
-    hPIDName = new TH1D("hPIDName", "PID Sorted by Count with Names;Name;Counts",
-                        pidCounts.size(), 0.5, pidCounts.size()+0.5);
-    for (size_t i = 0; i < pidCounts.size(); ++i) {
-        int pid = pidCounts[i].first;
-        double cnt = pidCounts[i].second;
-        TParticlePDG* part = pdgDB->GetParticle(pid);
-        const char* name = part ? part->GetName() : "Unknown";
-        hPIDName->SetBinContent(i+1, cnt);
-        hPIDName->GetXaxis()->SetBinLabel(i+1, name);
-    }
-    hPIDName->Write();
-
-    // Compute counts from hPIDUnsort using PDG
-    double nBaryon = 0, nAntiBaryon = 0, nMeson = 0;
-    double nProton = 0, nAntiProton = 0, nLambda = 0, nKaonPlus = 0, nRhoPlus = 0, nPionPlus = 0;
-    for (int ib = 1; ib <= nbins; ++ib) {
-      const char* lbl = hPIDUnsort->GetXaxis()->GetBinLabel(ib);
-      if (!lbl || !*lbl) continue;
-      int pid = std::stoi(lbl);
-      double cnt = hPIDUnsort->GetBinContent(ib);
-      if (cnt <= 0) continue;
-      // Classify by PID using PDG ID range
-      int abspid = std::abs(pid);
-      if (abspid >= 1000 && abspid < 6000) {
-          // Baryons have |PID| in [1000,6000)
-          if (pid > 0) nBaryon += cnt;
-          else         nAntiBaryon += cnt;
-      } else {
-          // Mesons have |PID| < 1000
-          nMeson += cnt;
-      }
-      if      (pid == 2212)   nProton     = cnt;
-      else if (pid == -2212)  nAntiProton = cnt;
-      else if (pid == 3122)   nLambda     = cnt;
-      else if (pid == 321)    nKaonPlus   = cnt;
-      else if (pid == 213)    nRhoPlus    = cnt;
-      else if (pid == 211)    nPionPlus   = cnt;
-    }
     // Fill ratio bins
     if (nMeson > 0)      hRatio->SetBinContent(1, (nAntiBaryon + nBaryon) / nMeson);
     if (nBaryon > 0)     hRatio->SetBinContent(2, nAntiBaryon / nBaryon);
