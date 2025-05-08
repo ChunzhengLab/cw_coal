@@ -135,7 +135,7 @@ bool EventReaderAMPT::NextEvent(Event& out) {
   fNparton = fEventBuf[1];
   out.SetUID(static_cast<unsigned int>(fCurrent++)); // 用序号当 ID
   // 清除上一次的数据
-  out.Clear();
+  out.Reset(nullptr);
   // 填充所有 parton
   for (int i = 0; i < fNparton; ++i) {
     // PDG < 0 表示反夸克，B = -1/3；否则表示正夸克，B = +1/3

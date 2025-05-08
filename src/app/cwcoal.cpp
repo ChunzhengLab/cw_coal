@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
                                     : SamplingMode::kSampleFromFile;
         // Single lambda for both modes
         fetch = [gen, sumBn, mode, partonCount](Event& e) {
-            e = gen->GenerateEvent(partonCount, sumBn, mode);
+            gen->GenerateEvent(e, partonCount, sumBn, mode);
             return true;
         };
     }

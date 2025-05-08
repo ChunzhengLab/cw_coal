@@ -1,0 +1,13 @@
+# Clang-Format configuration file
+BasedOnStyle: Google
+ColumnLimit: 120
+
+# Pointer alignment settings
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+# Single-line constructs
+AllowShortIfStatementsOnASingleLine: true
+AllowShortBlocksOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: false

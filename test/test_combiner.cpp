@@ -60,7 +60,7 @@ void RunTest(const std::string& label, CombinerBase& combiner,
                   << "3 * baryons + 2 * mesons + unused = " << totalUsed
                   << " != " << localPartons.size() << "\n";
     } else {
-        std::cout << "  ✅ Consistency check passed.\n";
+        std::cout << "Consistency check passed.\n";
     }
 }
 
@@ -96,7 +96,9 @@ int main() {
         int nParts = static_cast<int>(PhysicsConstants::GetMultiplicityHistogram().GetRandom());
         std::cout << "Generating base event " << (ie+1)
                   << " of " << nEvents << ": " << nParts << " partons" << std::endl;
-        baseEvents.push_back(eventGen.GenerateEvent(nParts, /*sumBaryonNumber=*/0));
+        Event evt;
+        eventGen.GenerateEvent(evt, nParts, /*sumBaryonNumber=*/0);
+        baseEvents.push_back(evt);
     }
 
     // Run each test: each writer is locally created per test

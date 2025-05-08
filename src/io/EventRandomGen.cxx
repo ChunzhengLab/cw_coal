@@ -5,7 +5,6 @@
 #include <cmath>
 #include "core/Particle.h"
 #include <vector>
-#include <functional>
 
 EventRandomGen::EventRandomGen(const std::string& histFilePath)
   : m_histFilePath(
@@ -16,14 +15,15 @@ EventRandomGen::EventRandomGen(const std::string& histFilePath)
 {
 }
 
-Event EventRandomGen::GenerateEvent(int nParts, int sumBaryonNumber,
-                                    SamplingMode mode) const {
+void EventRandomGen::GenerateEvent(Event& out, int nParts, int sumBaryonNumber,
+                                   SamplingMode mode) const {
+    out.Reset();
+
     // Determine number of partons
     int parts = (nParts < 0)
         ? static_cast<int>(PhysicsConstants::GetMultiplicityHistogram().GetRandom())
         : nParts;
 
-    Event event;
     std::vector<Parton*> partons;
     partons.reserve(parts);
 
@@ -58,7 +58,6 @@ Event EventRandomGen::GenerateEvent(int nParts, int sumBaryonNumber,
 
     // Add to event
     for (auto* p : partons) {
-        event.AddParton(p);
+        out.AddParton(p);
     }
-    return event;
 }

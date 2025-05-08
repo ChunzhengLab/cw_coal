@@ -31,7 +31,8 @@ public:
      * @param sumBaryonNumber 期望的总重子数（单位为1，默认为0）。
      * @param mode 采样模式，默认为 kSampleFromFile。
      */
-    Event GenerateEvent(int nParts = -1,
+     void GenerateEvent(Event& out,
+                        int nParts = -1,
                         int sumBaryonNumber = 0,
                         SamplingMode mode = kSampleFromFile) const;
 
