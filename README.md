@@ -118,12 +118,6 @@ make -j$(nproc)
 make install  # optional: install into system or custom prefix
 ```
 
-## Testing
-```bash
-cd build
-ctest --output-on-failure
-```
-
 ## License
 MIT License
 
