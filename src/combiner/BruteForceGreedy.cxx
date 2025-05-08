@@ -1,13 +1,15 @@
-#include "Combiners.h"
 #include <algorithm>
 #include <cmath>
 #include <random>
 
+#include "Combiners.h"
+
 class PartonNeighborSearcherBrute {
-public:
+ public:
   PartonNeighborSearcherBrute(const std::vector<Parton*>& partons);
   std::vector<std::pair<Parton*, double>> nearestNeighbors(const Parton* query, size_t maxNeighbors = 50) const;
-private:
+
+ private:
   const std::vector<Parton*>& m_partons;
 };
 
@@ -42,16 +44,17 @@ std::vector<Hadron*> BruteForceGreedy::Combine(const std::vector<Parton*>& parto
         double pz = a->Pz() + b->Pz();
         double m1 = a->GetMassFromPDG();
         double m2 = b->GetMassFromPDG();
-        double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1 * m1);
-        double E2 = std::sqrt(b->Px()*b->Px() + b->Py()*b->Py() + b->Pz()*b->Pz() + m2 * m2);
+        double E1 = std::sqrt(a->Px() * a->Px() + a->Py() * a->Py() + a->Pz() * a->Pz() + m1 * m1);
+        double E2 = std::sqrt(b->Px() * b->Px() + b->Py() * b->Py() + b->Pz() * b->Pz() + m2 * m2);
         double E_sum = E1 + E2;
-        double invMass = std::sqrt(std::max(0.0, E_sum * E_sum - (px*px + py*py + pz*pz)));
+        double invMass = std::sqrt(std::max(0.0, E_sum * E_sum - (px * px + py * py + pz * pz)));
         auto* h = new Hadron(x_mid, y_mid, z_mid, px, py, pz, sum, dist);
         h->SetMass(invMass);
         h->AddConstituentID(a->UniqueID());
         h->AddConstituentID(b->UniqueID());
         hadrons.push_back(h);
-        a->MarkUsed(); b->MarkUsed();
+        a->MarkUsed();
+        b->MarkUsed();
         matched = true;
         break;
       }
@@ -74,23 +77,25 @@ std::vector<Hadron*> BruteForceGreedy::Combine(const std::vector<Parton*>& parto
         double m1 = a->GetMassFromPDG();
         double m2 = b->GetMassFromPDG();
         double m3 = c->GetMassFromPDG();
-        double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1*m1);
-        double E2 = std::sqrt(b->Px()*b->Px() + b->Py()*b->Py() + b->Pz()*b->Pz() + m2*m2);
-        double E3 = std::sqrt(c->Px()*c->Px() + c->Py()*c->Py() + c->Pz()*c->Pz() + m3*m3);
+        double E1 = std::sqrt(a->Px() * a->Px() + a->Py() * a->Py() + a->Pz() * a->Pz() + m1 * m1);
+        double E2 = std::sqrt(b->Px() * b->Px() + b->Py() * b->Py() + b->Pz() * b->Pz() + m2 * m2);
+        double E3 = std::sqrt(c->Px() * c->Px() + c->Py() * c->Py() + c->Pz() * c->Pz() + m3 * m3);
         double E_sum = E1 + E2 + E3;
-        double invMass = std::sqrt(std::max(0.0, E_sum*E_sum - (px*px + py*py + pz*pz)));
+        double invMass = std::sqrt(std::max(0.0, E_sum * E_sum - (px * px + py * py + pz * pz)));
         auto* h = new Hadron(x_mid, y_mid, z_mid, px, py, pz, std::round(baryonSum), formationDist);
         h->SetMass(invMass);
         h->AddConstituentID(a->UniqueID());
         h->AddConstituentID(b->UniqueID());
         h->AddConstituentID(c->UniqueID());
         hadrons.push_back(h);
-        a->MarkUsed(); b->MarkUsed(); c->MarkUsed();
+        a->MarkUsed();
+        b->MarkUsed();
+        c->MarkUsed();
         matched = true;
         break;  // break out of c-loop
       }
       if (matched) {
-          break;  // break out of b-loop
+        break;  // break out of b-loop
       }
     }
   }
@@ -101,11 +106,11 @@ std::vector<Hadron*> BruteForceGreedy::Combine(const std::vector<Parton*>& parto
   return hadrons;
 }
 
-PartonNeighborSearcherBrute::PartonNeighborSearcherBrute(const std::vector<Parton*>& partons)
-  : m_partons(partons) {}
+PartonNeighborSearcherBrute::PartonNeighborSearcherBrute(const std::vector<Parton*>& partons) : m_partons(partons) {
+}
 
-std::vector<std::pair<Parton*, double>>
-PartonNeighborSearcherBrute::nearestNeighbors(const Parton* query, size_t maxResults) const {
+std::vector<std::pair<Parton*, double>> PartonNeighborSearcherBrute::nearestNeighbors(const Parton* query,
+                                                                                      size_t maxResults) const {
   std::vector<std::pair<Parton*, double>> results;
 
   for (auto* a : m_partons) {
@@ -114,10 +119,8 @@ PartonNeighborSearcherBrute::nearestNeighbors(const Parton* query, size_t maxRes
     results.emplace_back(a, dist);
   }
 
-  std::sort(results.begin(), results.end(),
-            [](const auto& a, const auto& b) { return a.second < b.second; });
+  std::sort(results.begin(), results.end(), [](const auto& a, const auto& b) { return a.second < b.second; });
 
-  if (results.size() > maxResults)
-    results.resize(maxResults);
+  if (results.size() > maxResults) results.resize(maxResults);
   return results;
 }

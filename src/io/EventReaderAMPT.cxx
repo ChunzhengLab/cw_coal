@@ -1,7 +1,9 @@
+#include "io/EventReaderAMPT.h"
+
 #include <fstream>
 #include <iostream>
+
 #include "TChain.h"
-#include "io/EventReaderAMPT.h"
 #include "core/Particle.h"
 
 void EventReaderAMPT::SetupBranches() {
@@ -10,23 +12,23 @@ void EventReaderAMPT::SetupBranches() {
 
   // Enable only the branches we need
   fTree->SetBranchStatus("Event", 1);
-  fTree->SetBranchStatus("ID",    1);
-  fTree->SetBranchStatus("Px",    1);
-  fTree->SetBranchStatus("Py",    1);
-  fTree->SetBranchStatus("Pz",    1);
-  fTree->SetBranchStatus("X",     1);
-  fTree->SetBranchStatus("Y",     1);
-  fTree->SetBranchStatus("Z",     1);
+  fTree->SetBranchStatus("ID", 1);
+  fTree->SetBranchStatus("Px", 1);
+  fTree->SetBranchStatus("Py", 1);
+  fTree->SetBranchStatus("Pz", 1);
+  fTree->SetBranchStatus("X", 1);
+  fTree->SetBranchStatus("Y", 1);
+  fTree->SetBranchStatus("Z", 1);
 
   // Bind branches to our buffers
   fTree->SetBranchAddress("Event", fEventBuf.data());
-  fTree->SetBranchAddress("ID",    fID.data());
-  fTree->SetBranchAddress("Px",    fPx.data());
-  fTree->SetBranchAddress("Py",    fPy.data());
-  fTree->SetBranchAddress("Pz",    fPz.data());
-  fTree->SetBranchAddress("X",     fX.data());
-  fTree->SetBranchAddress("Y",     fY.data());
-  fTree->SetBranchAddress("Z",     fZ.data());
+  fTree->SetBranchAddress("ID", fID.data());
+  fTree->SetBranchAddress("Px", fPx.data());
+  fTree->SetBranchAddress("Py", fPy.data());
+  fTree->SetBranchAddress("Pz", fPz.data());
+  fTree->SetBranchAddress("X", fX.data());
+  fTree->SetBranchAddress("Y", fY.data());
+  fTree->SetBranchAddress("Z", fZ.data());
 }
 
 EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
@@ -72,9 +74,7 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
 
       testFile.Close();
 
-      if (!chain) {
-        chain = new TChain(treeName.c_str());
-      }
+      if (!chain) { chain = new TChain(treeName.c_str()); }
       std::cout << "[INFO] Adding file (" << treeName << "): " << filePath << std::endl;
       chain->Add(filePath.c_str());
     }
@@ -133,19 +133,15 @@ bool EventReaderAMPT::NextEvent(Event& out) {
   if (fCurrent >= fNentries) return false;
   fTree->GetEntry(fCurrent);
   fNparton = fEventBuf[1];
-  out.SetUID(static_cast<unsigned int>(fCurrent++)); // 用序号当 ID
+  out.SetUID(static_cast<unsigned int>(fCurrent++));  // 用序号当 ID
   // 清除上一次的数据
   out.Reset(nullptr);
   // 填充所有 parton
   for (int i = 0; i < fNparton; ++i) {
     // PDG < 0 表示反夸克，B = -1/3；否则表示正夸克，B = +1/3
     int pdg = fID[i];
-    double bn = (pdg < 0 ? -1.0/3.0 : 1.0/3.0);
-    auto p = new Parton(
-      fX[i], fY[i], fZ[i],
-      fPx[i], fPy[i], fPz[i],
-      bn
-    );
+    double bn = (pdg < 0 ? -1.0 / 3.0 : 1.0 / 3.0);
+    auto p = new Parton(fX[i], fY[i], fZ[i], fPx[i], fPy[i], fPz[i], bn);
     p->SetPID(pdg);
     out.AddParton(p);
   }
@@ -153,8 +149,10 @@ bool EventReaderAMPT::NextEvent(Event& out) {
 }
 
 EventReaderAMPT::~EventReaderAMPT() {
-  if (fFile) { fFile->Close(); delete fFile; }
-  else if (TChain* chain = dynamic_cast<TChain*>(fTree)) {
+  if (fFile) {
+    fFile->Close();
+    delete fFile;
+  } else if (TChain* chain = dynamic_cast<TChain*>(fTree)) {
     delete chain;
   }
 }

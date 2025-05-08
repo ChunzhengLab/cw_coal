@@ -1,11 +1,12 @@
-#include "Particle.h"
-#include <vector>
-#include <nanoflann.hpp>
-#include "Combiners.h"
-#include "core/PartonKDTree.h"
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <nanoflann.hpp>
 #include <random>
+#include <vector>
+
+#include "Combiners.h"
+#include "Particle.h"
+#include "core/PartonKDTree.h"
 
 std::vector<Hadron*> KDTreeGreedy::Combine(const std::vector<Parton*>& partons) {
   // Baryon preference factor m_r: controls probability to reject meson
@@ -35,10 +36,10 @@ std::vector<Hadron*> KDTreeGreedy::Combine(const std::vector<Parton*>& partons) 
       // Kinematic calculation for meson
       double m1 = a->GetMassFromPDG();
       double m2 = b->GetMassFromPDG();
-      double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1*m1);
-      double E2 = std::sqrt(b->Px()*b->Px() + b->Py()*b->Py() + b->Pz()*b->Pz() + m2*m2);
+      double E1 = std::sqrt(a->Px() * a->Px() + a->Py() * a->Py() + a->Pz() * a->Pz() + m1 * m1);
+      double E2 = std::sqrt(b->Px() * b->Px() + b->Py() * b->Py() + b->Pz() * b->Pz() + m2 * m2);
       double E_sum = E1 + E2;
-      double invMass = std::sqrt(std::max(0.0, E_sum*E_sum - (px*px + py*py + pz*pz)));
+      double invMass = std::sqrt(std::max(0.0, E_sum * E_sum - (px * px + py * py + pz * pz)));
 
       if (rejectMesonDist(gen)) {
         continue;  // probabilistically reject this meson
@@ -87,11 +88,11 @@ std::vector<Hadron*> KDTreeGreedy::Combine(const std::vector<Parton*>& partons) 
         double m1 = a->GetMassFromPDG();
         double m2 = b->GetMassFromPDG();
         double m3 = c->GetMassFromPDG();
-        double E1 = std::sqrt(a->Px()*a->Px() + a->Py()*a->Py() + a->Pz()*a->Pz() + m1*m1);
-        double E2 = std::sqrt(b->Px()*b->Px() + b->Py()*b->Py() + b->Pz()*b->Pz() + m2*m2);
-        double E3 = std::sqrt(c->Px()*c->Px() + c->Py()*c->Py() + c->Pz()*c->Pz() + m3*m3);
+        double E1 = std::sqrt(a->Px() * a->Px() + a->Py() * a->Py() + a->Pz() * a->Pz() + m1 * m1);
+        double E2 = std::sqrt(b->Px() * b->Px() + b->Py() * b->Py() + b->Pz() * b->Pz() + m2 * m2);
+        double E3 = std::sqrt(c->Px() * c->Px() + c->Py() * c->Py() + c->Pz() * c->Pz() + m3 * m3);
         double E_sum = E1 + E2 + E3;
-        double invMass = std::sqrt(std::max(0.0, E_sum*E_sum - (px*px + py*py + pz*pz)));
+        double invMass = std::sqrt(std::max(0.0, E_sum * E_sum - (px * px + py * py + pz * pz)));
 
         auto* h = new Hadron(x, y, z, px, py, pz, std::round(baryonSum), dist);
         h->SetMass(invMass);

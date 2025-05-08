@@ -1,11 +1,12 @@
 #ifndef COMBINER_BASE_H
 #define COMBINER_BASE_H
 
-#include "Particle.h"
 #include <vector>
 
+#include "Particle.h"
+
 class CombinerBase {
-public:
+ public:
   virtual ~CombinerBase() = default;
 
   /// Combine partons into hadrons using a specific strategy
@@ -14,8 +15,8 @@ public:
   /// Final sweep to combine all unused partons into mesons or baryons
   virtual std::vector<Hadron*> Afterburner(const std::vector<Parton*>& partons);
 
-protected:
+ protected:
   CombinerBase() = default;
 };
 
-#endif // COMBINER_BASE_H
+#endif  // COMBINER_BASE_H
