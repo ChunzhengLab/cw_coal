@@ -30,64 +30,92 @@ void EventReaderAMPT::SetupBranches() {
 }
 
 EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
-  // 支持单文件或.list文件列表
+  fTree = nullptr;
+  fFile = nullptr;
+  fNentries = 0;
+
   if (fn.size() >= 5 && fn.substr(fn.size() - 5) == ".list") {
-    // 读取文件列表
     TChain* chain = nullptr;
     std::ifstream inputStream(fn);
     if (!inputStream) {
-      std::cerr << "Cannot open list file " << fn << std::endl;
-      std::exit(1);
+      std::cerr << "[ERROR] Cannot open list file: " << fn << std::endl;
+      return;
     }
+
     std::string filePath;
     std::string treeName;
     while (std::getline(inputStream, filePath)) {
       if (filePath.empty()) continue;
 
-      // 检测树的名称
       TFile testFile(filePath.c_str(), "READ");
-      if (!testFile.IsOpen()) {
-        std::cerr << "Cannot open file to check tree: " << filePath << std::endl;
-        std::exit(1);
+      if (!testFile.IsOpen() || testFile.IsZombie()) {
+        std::cerr << "[WARN] Skipping unreadable or zombie file: " << filePath << std::endl;
+        continue;
       }
 
-      if (testFile.Get("AMPT")) {
+      if (testFile.GetNkeys() == 0) {
+        std::cerr << "[WARN] Skipping empty file (no keys): " << filePath << std::endl;
+        testFile.Close();
+        continue;
+      }
+
+      TTree* testTree = nullptr;
+      if ((testTree = static_cast<TTree*>(testFile.Get("AMPT")))) {
         treeName = "AMPT";
-      } else if (testFile.Get("AMPT_I")) {
+      } else if ((testTree = static_cast<TTree*>(testFile.Get("AMPT_I")))) {
         treeName = "AMPT_I";
       } else {
-        std::cerr << "Neither 'AMPT' nor 'AMPT_I' tree found in " << filePath << std::endl;
-        std::exit(1);
+        std::cerr << "[WARN] No AMPT/AMPT_I tree found in: " << filePath << std::endl;
+        testFile.Close();
+        continue;
       }
+
       testFile.Close();
 
       if (!chain) {
-        // 第一个文件确定tree名字后，再初始化chain
         chain = new TChain(treeName.c_str());
       }
-      std::cout << "Adding file (" << treeName << "): " << filePath << std::endl;
+      std::cout << "[INFO] Adding file (" << treeName << "): " << filePath << std::endl;
       chain->Add(filePath.c_str());
     }
+
+    if (!chain || chain->GetNtrees() == 0) {
+      std::cerr << "[ERROR] No valid ROOT files found in list." << std::endl;
+      return;
+    }
+
     fTree = chain;
   } else {
-    // 单个 ROOT 文件
-    fFile = TFile::Open(fn.c_str());
+    // 单个文件模式
+    fFile = TFile::Open(fn.c_str(), "READ");
     if (!fFile || fFile->IsZombie()) {
-      std::cerr << "Cannot open ROOT file " << fn << std::endl;
-      std::exit(1);
+      std::cerr << "[ERROR] Cannot open ROOT file: " << fn << std::endl;
+      return;
     }
-    if (fFile->Get("AMPT")) {
-      fTree = static_cast<TTree*>(fFile->Get("AMPT"));
-    } else if (fFile->Get("AMPT_I")) {
-      fTree = static_cast<TTree*>(fFile->Get("AMPT_I"));
+
+    if (fFile->GetNkeys() == 0) {
+      std::cerr << "[ERROR] ROOT file is empty (no keys): " << fn << std::endl;
+      return;
+    }
+
+    if ((fTree = static_cast<TTree*>(fFile->Get("AMPT")))) {
+      // OK
+    } else if ((fTree = static_cast<TTree*>(fFile->Get("AMPT_I")))) {
+      // OK
     } else {
-      std::cerr << "Neither 'AMPT' nor 'AMPT_I' tree found in " << fn << std::endl;
-      std::exit(1);
+      std::cerr << "[ERROR] No AMPT/AMPT_I tree found in: " << fn << std::endl;
+      fTree = nullptr;
+      return;
     }
   }
-  
+
+  if (!fTree) {
+    std::cerr << "[ERROR] No valid tree loaded." << std::endl;
+    return;
+  }
+
   fNentries = fTree->GetEntries();
-  // 调整 vector 大小
+
   const std::size_t maxN = 100000;
   fID.resize(maxN);
   fPx.resize(maxN);
@@ -96,7 +124,9 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
   fX.resize(maxN);
   fY.resize(maxN);
   fZ.resize(maxN);
+
   SetupBranches();
+  std::cout << "[INFO] EventReaderAMPT initialized with " << fNentries << " entries." << std::endl;
 }
 
 bool EventReaderAMPT::NextEvent(Event& out) {
