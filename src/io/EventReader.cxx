@@ -1,6 +1,5 @@
 #include "io/EventReader.h"
 #include "core/Particle.h"
-#include <stdexcept>
 #include <fstream>
 #include "TChain.h"
 

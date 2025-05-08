@@ -1,18 +1,17 @@
 #ifndef PHYSICS_CONSTANTS_H
 #define PHYSICS_CONSTANTS_H
 
-#include "RtypesCore.h"
 #include "TPDGCode.h"  // Correct path for ROOT's TPDGCode
 #include <unordered_map>
 #include <optional>
-#include "TH1I.h"
+#include "TH1.h"
 #include <vector>
 
 namespace PhysicsConstants {
 inline const std::unordered_map<int, double>& GetMassTable() {
     static const std::unordered_map<int, double> massTable = {
         {kDown,       0.00467},
-        {kUp,         0.00216}, 
+        {kUp,         0.00216},
         {kStrange,    0.0934},
         {kCharm,      1.27},
         {kBottom,     4.18},

@@ -4,8 +4,6 @@
 #include <cmath>
 #include <algorithm>
 #include <limits>
-#include <unordered_set>
-#include <array>
 
 std::vector<Hadron*> KDTreeDualGreedy::Combine(const std::vector<Parton*>& partons) {
     std::vector<Hadron*> hadrons;

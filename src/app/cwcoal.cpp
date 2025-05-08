@@ -1,4 +1,3 @@
-#include "core/Particle.h"
 #include "core/Event.h"
 #include "io/EventReaderAMPT.h"
 #include "io/EventRandomGen.h"
@@ -105,7 +104,7 @@ int main(int argc, char** argv) {
     if (outputEnabled) {
         writer = std::make_unique<EventWriter>(saveDir + "/" + dataOutput);
     }
-    AnalyzerQA qa; 
+    AnalyzerQA qa;
     AnalyzerCVE cve;
     qa.Init();
     cve.Init();

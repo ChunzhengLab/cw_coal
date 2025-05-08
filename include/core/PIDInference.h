@@ -2,10 +2,7 @@
 #define PIDINFERENCE_H
 
 #include <vector>
-#include <cmath>
 #include <random>
-#include <algorithm>
-#include <numeric>
 #include "core/PhysicsConstants.h"
 
 class PIDInference {

@@ -1,6 +1,5 @@
 #include "ana/AnalyzerCVE.h"
 #include "TFile.h"
-#include "TH1D.h"
 #include "TProfile.h"
 #include "TMath.h"
 #include "TVector2.h"
@@ -8,7 +7,6 @@
 #include "core/Particle.h"
 #include <cmath>
 #include <vector>
-#include <algorithm>
 
 // Labels for the six charge combinations
 static const char* comboLabels[6] = {

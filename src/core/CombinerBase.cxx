@@ -2,7 +2,6 @@
 #include "core/Particle.h"
 #include <algorithm>
 #include <vector>
-#include <iostream>
 
 
 std::vector<Hadron*> CombinerBase::Afterburner(const std::vector<Parton*>& partons) {

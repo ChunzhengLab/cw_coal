@@ -4,10 +4,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TFile.h"
-#include "TH1D.h"
-#include "TH2D.h"
 #include <cmath>
-#include <vector>
 #include <utility>
 #include "PhysicsConstants.h"
 

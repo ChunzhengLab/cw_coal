@@ -2,9 +2,7 @@
 #define EVENT_READER_H
 
 #include <string>
-#include "core/Particle.h"
 #include "core/Event.h"
-#include <fstream>
 #include "TChain.h"
 #include "TFile.h"
 #include "TTree.h"

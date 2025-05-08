@@ -1,6 +1,5 @@
 #include "core/PIDInference.h"
 #include <algorithm>
-#include <iostream>
 #include "core/PhysicsConstants.h"
 #include <random>
 #include <vector>
@@ -123,7 +122,7 @@ int PIDInference::InferMesonSpin(double vpratio, double rnd) {
 
 // 针对轻味对角态 (uū、dd̄)，根据 rrhopi、romrho0 计算 π⁰/η/ρ⁰/ω 概率，并用 rnd 随机分配
 int PIDInference::ResolveDiagonalLightMeson(double rnd, double rrhopi, double romrho0) {
-    // Based on AMPT logic: probabilities for π0, η, ρ0, ω 
+    // Based on AMPT logic: probabilities for π0, η, ρ0, ω
     // p_pi0 = 1/(2*(1+rrhopi))
     // p_rho0 = rrhopi/(2*(1+rrhopi))
     // p_omega = rrhopi*romrho0/(2*(1+rrhopi))

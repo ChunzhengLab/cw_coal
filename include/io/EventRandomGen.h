@@ -2,8 +2,6 @@
 #define EVENTRANDOMGEN_H
 
 #include <string>
-#include <vector>
-#include "core/Particle.h"
 #include "core/Event.h"
 
 /**

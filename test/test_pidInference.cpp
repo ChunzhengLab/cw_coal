@@ -2,7 +2,6 @@
 #include "core/PhysicsConstants.h"
 #include <iostream>
 #include <vector>
-#include <cmath>
 #include <map>
 
 // Helper to run a single test case

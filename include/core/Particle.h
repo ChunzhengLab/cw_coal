@@ -1,14 +1,14 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
-#include "TObject.h"
 #include <array>
-#include <algorithm>
 #include <cmath>
 #include <vector>
+
+#include "TObject.h"
+#include "TRandom3.h" // Added include for TRandom3
+
 #include "PhysicsConstants.h"
-#include "TPDGCode.h"
-#include <TRandom3.h> // Added include for TRandom3
 
 class Particle : public TObject {
 public:
@@ -59,11 +59,11 @@ public:
   double GetMass() const {return fMass;}
 
   void SetPID(int pid) {fPID = pid;}
-  int GetPID() const {return fPID;} 
+  int GetPID() const {return fPID;}
 
   double GetBaryonNumber() const { return fBaryonNumber; }
   void SetBaryonNumber(double b) { fBaryonNumber = b; }
-  
+
   unsigned int UniqueID() const { return fUniqueID; }
   void SetUID(unsigned int uid) { fUniqueID = uid; }
 

@@ -6,12 +6,10 @@
 #include "TH1.h"  // for TH1::kCanRebin
 #include "ana/AnalyzerQA.h"
 #include "TFile.h"
-#include "TH1D.h"
 #include "TProfile.h"
 #include <cmath>
 #include "TDatabasePDG.h"
 #include "TParticlePDG.h"
-#include <iostream>
 
 AnalyzerQA::AnalyzerQA()
   : hPt_b(nullptr), hPt_ab(nullptr), hPt_m(nullptr),

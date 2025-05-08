@@ -6,11 +6,10 @@
 #include "io/EventRandomGen.h"
 #include <iostream>
 #include <string>
-#include <memory>
 #include <chrono>
 #include <algorithm>
 #include <vector>
-#include <cstdlib> 
+#include <cstdlib>
 #include <string>
 
 // Path to parton histogram file: CLI override > env var > installed DATA_INSTALL_DIR
@@ -111,7 +110,7 @@ int main() {
             auto& evt = baseEvents[ie];
             Event event = cloneEvent(evt);
             std::cout << "Using base event " << (ie+1)
-                      << " of " << nEvents << " with " << evt.GetPartons().size() 
+                      << " of " << nEvents << " with " << evt.GetPartons().size()
                       << " partons for test \"" << tc.label << "\"" << std::endl;
             RunTest(tc.label, tc.combiner, event);
             writer.WriteEvent(&event);

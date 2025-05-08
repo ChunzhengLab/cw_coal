@@ -2,10 +2,7 @@
 #define ANALYZERCVE_H
 
 #include <string>
-#include <cmath>
 #include "core/Event.h"
-#include "TVector2.h"
-#include "TMath.h"
 
 class TH1D;
 class TProfile;
@@ -37,7 +34,7 @@ public:
 
 private:
 
-    bool isProcessMixed;
+    bool isProcessMixed{false};
 
     //             baryon, antibaryon, meson
     // baryon,       0,       1,        2
