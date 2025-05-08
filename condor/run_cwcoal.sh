@@ -4,8 +4,6 @@
 # HTCondor作业包装脚本
 # ==============================================================================
 
-set -e
-
 # ----------------------------
 # 1. 环境初始化
 # ----------------------------
@@ -33,15 +31,13 @@ export LD_LIBRARY_PATH="/storage/fdunphome/wangchunzheng/CWCoalProject/lib64:$LD
 # ----------------------------
 INPUT_FILE=$1
 JOB_ID=$2
-OUTPUT_ROOT="/storage/fdunphome/wangchunzheng/CWCoalProject"
-WORKDIR="$OUTPUT_ROOT/job_${JOB_ID}"  # 独立工作目录
+OUTPUT_ROOT="/storage/fdunphome/wangchunzheng/CWCoalProject/bin/condor/outputs/"
+SAVEDIR="$OUTPUT_ROOT/job_${JOB_ID}"  # 独立工作目录
 
 # ----------------------------
 # 4. 目录准备
 # ----------------------------
-mkdir -p "$OUTPUT_ROOT/results"
-mkdir -p "$OUTPUT_ROOT/logs"
-mkdir -p "$WORKDIR"
+mkdir -p "$SAVEDIR"
 
 # ----------------------------
 # 5. 执行主程序
@@ -49,23 +45,24 @@ mkdir -p "$WORKDIR"
 echo "=== JOB STARTED [$(date)] ==="
 echo "Input file: $INPUT_FILE"
 echo "Job ID    : $JOB_ID"
-echo "Workdir   : $WORKDIR"
+echo "Workdir   : $SAVEDIR"
 
 /storage/fdunphome/wangchunzheng/CWCoalProject/bin/cwcoal \
   -i "$INPUT_FILE" \
   -a KDTreeGlobal \
-  -w "$WORKDIR"
+  -s "$SAVEDIR" \
+  -r 1.5
 
 # ----------------------------
 # 6. 文件转移和清理
 # ----------------------------
-if [ -f "$WORKDIR/cve_KDTreeGlobal.root" ]; then
-  mv "$WORKDIR/cve_KDTreeGlobal.root" "$OUTPUT_ROOT/results/cve_KDTreeGlobal_${JOB_ID}.root"
+if [ -f "$SAVEDIR/cve_KDTreeGlobal.root" ]; then
+  mv "$SAVEDIR/cve_KDTreeGlobal.root" "$OUTPUT_ROOT/cve_KDTreeGlobal_${JOB_ID}.root"
 fi
-if [ -f "$WORKDIR/qa_KDTreeGlobal.root" ]; then
-  mv "$WORKDIR/qa_KDTreeGlobal.root" "$OUTPUT_ROOT/results/qa_KDTreeGlobal_${JOB_ID}.root"
+if [ -f "$SAVEDIR/qa_KDTreeGlobal.root" ]; then
+  mv "$SAVEDIR/qa_KDTreeGlobal.root" "$OUTPUT_ROOT/qa_KDTreeGlobal_${JOB_ID}.root"
 fi
-rm -rf "$WORKDIR"
+rm -rf "$SAVEDIR"
 
 # ----------------------------
 # 7. 环境清理

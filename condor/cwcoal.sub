@@ -4,13 +4,13 @@
 universe       = vanilla
 
 # 基本配置
-executable     = /storage/fdunphome/wangchunzheng/CWCoalProject/scripts/run_cwcoal.sh
+executable     = /storage/fdunphome/wangchunzheng/CWCoalProject/bin/condor/run_cwcoal.sh
 arguments      = $(INPUT_FILE) $(Process)
 
 # 日志配置
-output         = /storage/fdunphome/wangchunzheng/CWCoalProject/logs/job_$(Process).out
-error          = /storage/fdunphome/wangchunzheng/CWCoalProject/logs/job_$(Process).err
-log            = /storage/fdunphome/wangchunzheng/CWCoalProject/logs/job_$(Process).log
+output         = /storage/fdunphome/wangchunzheng/CWCoalProject/bin/condor/outputs/job_$(Process).out
+error          = /storage/fdunphome/wangchunzheng/CWCoalProject/bin/condor/outputs/job_$(Process).err
+log            = /storage/fdunphome/wangchunzheng/CWCoalProject/bin/condor/outputs/job_$(Process).log
 
 # 资源请求
 # request_cpus   = 2
@@ -23,4 +23,4 @@ transfer_executable     = False
 # +JobFlavour             = "workday"
 
 # 提交配置
-queue INPUT_FILE from /storage/fdunphome/wangchunzheng/CWCoalProject/condor/joblist_afterART.txt
+queue INPUT_FILE from /storage/fdunphome/wangchunzheng/CWCoalProject/bin/condor/joblist_afterZPC.txt
