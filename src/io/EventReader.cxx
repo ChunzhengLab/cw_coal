@@ -39,6 +39,10 @@ EventReader::~EventReader() {
 Event* EventReader::NextEvent() {
   if (currentEntry_ >= nEntries_) { return nullptr; }
 
+  if (copyMode_ == EventReader::kShallowCopy && eventBuffer_) {
+      eventBuffer_->Reset();
+  }
+
   tree_->GetEntry(currentEntry_);
   ++currentEntry_;
 
@@ -62,7 +66,10 @@ void EventReader::Close() {
     delete file_;
     file_ = nullptr;
   }
-  eventBuffer_ = nullptr;
+  if (eventBuffer_) {
+      delete eventBuffer_;
+      eventBuffer_ = nullptr;
+  }
   tree_ = nullptr;
   currentEntry_ = 0;
   nEntries_ = 0;

@@ -24,4 +24,8 @@ void EventWriter::Close() {
     delete m_file;
     m_file = nullptr;
   }
+  if (m_tree) {
+      delete m_tree;
+      m_tree = nullptr;
+  }
 }

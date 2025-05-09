@@ -10,7 +10,9 @@
 #include "TMath.h"
 #include "TRandom3.h"
 
-ClassImp(Particle) ClassImp(Parton) ClassImp(Hadron)
+ClassImp(Particle);
+ClassImp(Parton);
+ClassImp(Hadron);
 
     unsigned int Particle::sNextID = 1;
 

@@ -11,6 +11,7 @@ class Event : public TObject {
   Event() : fEvtID(sNextID++) {
   }
   virtual ~Event() {
+      Reset();
   }
 
   static void ResetIDCounter(unsigned int next = 1) {

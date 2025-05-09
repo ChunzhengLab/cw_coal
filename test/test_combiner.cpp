@@ -89,11 +89,10 @@ int main() {
   std::vector<Event> baseEvents;
   baseEvents.reserve(nEvents);
   for (int ie = 0; ie < nEvents; ++ie) {
-    int nParts = static_cast<int>(PhysicsConstants::GetMultiplicityHistogram().GetRandom());
-    std::cout << "Generating base event " << (ie + 1) << " of " << nEvents << ": " << nParts << " partons" << std::endl;
-    Event evt;
-    eventGen.GenerateEvent(evt, nParts, /*sumBaryonNumber=*/0);
-    baseEvents.push_back(evt);
+      int nParts = static_cast<int>(PhysicsConstants::GetMultiplicityHistogram().GetRandom());
+      std::cout << "Generating base event " << (ie + 1) << " / " << nEvents << " : " << nParts << " partons\n";
+      baseEvents.emplace_back();                         // 直接就地构造一个空 Event
+      eventGen.GenerateEvent(baseEvents.back(), nParts, /*sumBaryonNumber=*/0);
   }
 
   // Run each test: each writer is locally created per test
