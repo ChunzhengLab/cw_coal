@@ -65,9 +65,9 @@ void TimeFrameManager::BuildFixedTimeStepFrames(const std::vector<Parton*>& part
   if (partons.empty()) return;
   
   // 找到最小时间作为起点
-  float minTime = partons[0]->T();
+  float minTime = static_cast<float>(partons[0]->T());
   for (auto* p : partons) {
-    minTime = std::min(minTime, p->T());
+    minTime = std::min(minTime, static_cast<float>(p->T()));
   }
   
   // 按固定时间步长建立时间帧
@@ -81,12 +81,12 @@ void TimeFrameManager::BuildEqualTimeFrames(const std::vector<Parton*>& partons)
   // 模式2: 给定帧数，自动提取最大时间，平均分配时间帧
   if (partons.empty()) return;
   
-  float minTime = partons[0]->T();
-  float maxTime = partons[0]->T();
+  float minTime = static_cast<float>(partons[0]->T());
+  float maxTime = static_cast<float>(partons[0]->T());
   
   for (auto* p : partons) {
-    minTime = std::min(minTime, p->T());
-    maxTime = std::max(maxTime, p->T());
+    minTime = std::min(minTime, static_cast<float>(p->T()));
+    maxTime = std::max(maxTime, static_cast<float>(p->T()));
   }
   
   // 按时间均匀分配

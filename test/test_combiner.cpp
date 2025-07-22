@@ -59,12 +59,12 @@ void RunTest(const std::string& label, CombinerBase& combiner, Event& event) {
 
 int main() {
   // Prepare combiner instances
-  // BruteForceGlobal bfGlobal;
-  // BruteForceGreedy bfGreedy;
-  KDTreeGlobal kdGlobal;
-  KDTreeGreedy kdGreedy;
-  // BruteForceDualGreedy bfDualGreedy;
-  // KDTreeDualGreedy    kdDualGreedy;
+  // ExhaustiveSorted exhaustiveSorted;
+  // ExhaustiveSequential exhaustiveSequential;
+  KDTreeSorted kdTreeSorted;
+  KDTreeSequential kdTreeSequential;
+  // ExhaustiveCompetitive exhaustiveCompetitive;
+  // KDTreeCompetitive kdTreeCompetitive;
 
   // Create an EventRandomGen to produce parton lists
   EventRandomGen eventGen(kPartonHistFile);
@@ -77,8 +77,8 @@ int main() {
   TestCase tests[] = {
       // { "BruteForceGlobal", bfGlobal },
       // { "BruteForceGreedy", bfGreedy },
-      {"KDTreeGlobal", kdGlobal},
-      {"KDTreeGreedy", kdGreedy}
+      {"KDTreeSorted", kdTreeSorted},
+      {"KDTreeSequential", kdTreeSequential}
       // , { "BruteForceDualGreedy", bfDualGreedy }
       // , { "KDTreeDualGreedy",    kdDualGreedy }
   };

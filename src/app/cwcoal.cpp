@@ -24,8 +24,8 @@ static void PrintUsage() {
             << "  -h, --help               Show this help message\n"
             << "  -i, --data-input <file>  AMPT input ROOT file or list (if omitted, random generation mode)\n"
             << "  -o, --data-output <file> Output ROOT file for hadrons (if omitted, no output will be written)\n"
-            << "  -a, --algorithm <name>   Combiner algorithm: KDTreeGlobal, KDTreeGreedy, BruteForceGlobal, "
-               "BruteForceGreedy (default: KDTreeGlobal)\n"
+            << "  -a, --algorithm <name>   Combiner algorithm: KDTreeSorted, KDTreeSequential, ExhaustiveSorted, "
+               "ExhaustiveSequential, KDTreeCompetitive, ExhaustiveCompetitive (default: KDTreeSorted)\n"
             << "  -n, --events <N>         Number of events to process/generate (if omitted, process all events)\n"
             << "  -b, --bn <B>             Target total baryon number per event (default: 0)\n"
             << "  -p, --partons <P>        Number of partons per event (-1 to sample from histogram)\n"
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
   std::string dataInput;
   std::string dataOutput;
   bool outputEnabled = false;  // Only write events if --data-output is specified
-  std::string algorithm = "KDTreeGlobal";
+  std::string algorithm = "KDTreeSorted";
   std::string saveDir = ".";  // Output directory for all files
   int nEvents = 10;
   int sumBn = 0;
@@ -131,18 +131,18 @@ int main(int argc, char** argv) {
 
   // Select combiner
   std::unique_ptr<CombinerBase> combiner;
-  if (algorithm == "KDTreeGlobal") {
-    combiner = std::make_unique<KDTreeGlobal>(baryonPreference);
-  } else if (algorithm == "KDTreeGreedy") {
-    combiner = std::make_unique<KDTreeGreedy>(baryonPreference);
-  } else if (algorithm == "BruteForceGlobal") {
-    combiner = std::make_unique<BruteForceGlobal>(baryonPreference);
-  } else if (algorithm == "BruteForceGreedy") {
-    combiner = std::make_unique<BruteForceGreedy>(baryonPreference);
-  } else if (algorithm == "BruteForceDualGreedy") {
-    combiner = std::make_unique<BruteForceDualGreedy>(baryonPreference);
-  } else if (algorithm == "KDTreeDualGreedy") {
-    combiner = std::make_unique<KDTreeDualGreedy>(baryonPreference);
+  if (algorithm == "KDTreeSorted") {
+    combiner = std::make_unique<KDTreeSorted>(baryonPreference);
+  } else if (algorithm == "KDTreeSequential") {
+    combiner = std::make_unique<KDTreeSequential>(baryonPreference);
+  } else if (algorithm == "ExhaustiveSorted") {
+    combiner = std::make_unique<ExhaustiveSorted>(baryonPreference);
+  } else if (algorithm == "ExhaustiveSequential") {
+    combiner = std::make_unique<ExhaustiveSequential>(baryonPreference);
+  } else if (algorithm == "ExhaustiveCompetitive") {
+    combiner = std::make_unique<ExhaustiveCompetitive>(baryonPreference);
+  } else if (algorithm == "KDTreeCompetitive") {
+    combiner = std::make_unique<KDTreeCompetitive>(baryonPreference);
   } 
   else {
     std::cerr << "Unknown algorithm: " << algorithm << std::endl;

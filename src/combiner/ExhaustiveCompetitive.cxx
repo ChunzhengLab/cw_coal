@@ -3,7 +3,7 @@
 
 #include "Combiners.h"
 
-auto BruteForceDualGreedy::Combine(const std::vector<Parton*>& partons) -> std::vector<Hadron*> {
+auto ExhaustiveCompetitive::Combine(const std::vector<Parton*>& partons) -> std::vector<Hadron*> {
   std::vector<Hadron*> hadrons;
 
   for (auto* a : partons) {

@@ -23,7 +23,7 @@ struct Candidate {
   }
 };
 
-std::vector<Hadron*> KDTreeGlobal::Combine(const std::vector<Parton*>& partons)
+std::vector<Hadron*> KDTreeSorted::Combine(const std::vector<Parton*>& partons)
 {
   const double rInvScale = m_r;                // keep existing scale factor
 

@@ -8,7 +8,7 @@
 #include "Particle.h"
 #include "core/PartonKDTree.h"
 
-std::vector<Hadron*> KDTreeGreedy::Combine(const std::vector<Parton*>& partons) {
+std::vector<Hadron*> KDTreeSequential::Combine(const std::vector<Parton*>& partons) {
   // Baryon preference factor m_r: controls probability to reject meson
   std::mt19937 gen(std::random_device{}());
   std::bernoulli_distribution rejectMesonDist(m_r / (1.0 + m_r));

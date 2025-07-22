@@ -6,7 +6,7 @@
 #include "core/Particle.h"
 #include "core/PartonKDTree.h"
 
-std::vector<Hadron*> KDTreeDualGreedy::Combine(const std::vector<Parton*>& partons) {
+std::vector<Hadron*> KDTreeCompetitive::Combine(const std::vector<Parton*>& partons) {
   std::vector<Hadron*> hadrons;
   PartonKDTree tree(partons);
 

@@ -20,16 +20,16 @@ void Event::Reset(Option_t* opt) {
 void Event::ShufflePartons(ShuffleLevel level) {
   double frac = 0.0;
   switch (level) {
-    case kLevel1:
+    case ShuffleLevel::kLevel1:
       frac = 0.25;
       break;
-    case kLevel2:
+    case ShuffleLevel::kLevel2:
       frac = 0.50;
       break;
-    case kLevel3:
+    case ShuffleLevel::kLevel3:
       frac = 0.75;
       break;
-    case kLevel4:
+    case ShuffleLevel::kLevel4:
       frac = 1.00;
       break;
   }

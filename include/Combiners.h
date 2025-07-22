@@ -6,9 +6,9 @@
 #include "core/CombinerBase.h"
 #include "core/Particle.h"
 
-class BruteForceGlobal : public CombinerBase {
+class ExhaustiveSorted : public CombinerBase {
  public:
-  explicit BruteForceGlobal(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {
+  explicit ExhaustiveSorted(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {
   }
   std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
@@ -16,9 +16,9 @@ class BruteForceGlobal : public CombinerBase {
   double m_r;
 };
 
-class BruteForceGreedy : public CombinerBase {
+class ExhaustiveSequential : public CombinerBase {
  public:
-  explicit BruteForceGreedy(double baryonPreference = 1.0) : m_r(baryonPreference) {
+  explicit ExhaustiveSequential(double baryonPreference = 1.0) : m_r(baryonPreference) {
   }
   std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
@@ -26,9 +26,9 @@ class BruteForceGreedy : public CombinerBase {
   double m_r;
 };
 
-class BruteForceDualGreedy : public CombinerBase {
+class ExhaustiveCompetitive : public CombinerBase {
  public:
-  explicit BruteForceDualGreedy(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {
+  explicit ExhaustiveCompetitive(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {
   }
   std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
@@ -36,9 +36,9 @@ class BruteForceDualGreedy : public CombinerBase {
   double m_r;
 };
 
-class KDTreeGlobal : public CombinerBase {
+class KDTreeSorted : public CombinerBase {
  public:
-  explicit KDTreeGlobal(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {
+  explicit KDTreeSorted(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {
   }
   std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
@@ -46,9 +46,9 @@ class KDTreeGlobal : public CombinerBase {
   double m_r;
 };
 
-class KDTreeGreedy : public CombinerBase {
+class KDTreeSequential : public CombinerBase {
  public:
-  explicit KDTreeGreedy(double baryonPreference = 1.0) : m_r(baryonPreference) {
+  explicit KDTreeSequential(double baryonPreference = 1.0) : m_r(baryonPreference) {
   }
   std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 
@@ -56,9 +56,9 @@ class KDTreeGreedy : public CombinerBase {
   double m_r;
 };
 
-class KDTreeDualGreedy : public CombinerBase {
+class KDTreeCompetitive : public CombinerBase {
  public:
-  explicit KDTreeDualGreedy(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {
+  explicit KDTreeCompetitive(double baryonPreference = 1.0) : m_r(3 * baryonPreference) {
   }
   std::vector<Hadron*> Combine(const std::vector<Parton*>& partons) override;
 

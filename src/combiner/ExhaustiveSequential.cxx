@@ -13,7 +13,7 @@ class PartonNeighborSearcherBrute {
   const std::vector<Parton*>& m_partons;
 };
 
-std::vector<Hadron*> BruteForceGreedy::Combine(const std::vector<Parton*>& partons) {
+std::vector<Hadron*> ExhaustiveSequential::Combine(const std::vector<Parton*>& partons) {
   std::vector<Hadron*> hadrons;
   PartonNeighborSearcherBrute searcher(partons);
 
