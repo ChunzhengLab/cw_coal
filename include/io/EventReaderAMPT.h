@@ -38,6 +38,7 @@ class EventReaderAMPT {
   std::vector<Int_t> fID;
   std::vector<Float_t> fPx, fPy, fPz;
   std::vector<Float_t> fX, fY, fZ;
+  std::vector<Float_t> fT;
 };
 
 #endif  // EVENTREADERAMPT_H

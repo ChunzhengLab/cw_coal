@@ -11,11 +11,11 @@
 namespace PhysicsConstants {
 inline const std::unordered_map<int, double>& GetMassTable() {
   static const std::unordered_map<int, double> massTable = {
-      {kDown, 0.00467},
-      {kUp, 0.00216},
-      {kStrange, 0.0934},
-      {kCharm, 1.27},
-      {kBottom, 4.18},
+      {kDown, 0.325},
+      {kUp, 0.325},
+      {kStrange, 0.5},
+      {kCharm, 1.60},
+      {kBottom, 5.0}, // constituent mass from pythia8
       {kTop, 172.5},
       {kGluon, 0.0},
       {kElectron, 0.000510999},

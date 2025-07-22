@@ -16,7 +16,7 @@ struct Candidate {
       : distance(dist), isBaryon(isB), idxA(a), idxB(b), idxC(c) {
   }
 
-  bool operator<(const Candidate& other) const {
+  auto operator<(const Candidate& other) const -> bool {
     return distance < other.distance;
   }
 };

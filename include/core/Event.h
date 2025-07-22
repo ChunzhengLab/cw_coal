@@ -18,7 +18,13 @@ class Event : public TObject {
     sNextID = next;
   }
 
-  enum ShuffleLevel { kLevel1, kLevel2, kLevel3, kLevel4 };
+  enum class ShuffleLevel : std::uint8_t {
+    kLevel1,
+    kLevel2,
+    kLevel3,
+    kLevel4
+  };
+
   void ShufflePartons(ShuffleLevel level);
   /// Shuffle a fraction of parton positions; fraction must be between 0 and 1.
   void ShufflePartons(double fraction);

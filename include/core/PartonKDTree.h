@@ -9,14 +9,14 @@
 
 class PartonCloud {
  public:
-  PartonCloud(const std::vector<Parton*>& points) : m_points(points) {
+  explicit PartonCloud(const std::vector<Parton*>& points) : m_points(points) {
   }
 
-  inline size_t kdtree_get_point_count() const {
+   size_t kdtree_get_point_count() const {
     return m_points.size();
   }
 
-  inline double kdtree_get_pt(const size_t idx, const size_t dim) const {
+   double kdtree_get_pt(const size_t idx, const size_t dim) const {
     if (dim == 0) return m_points[idx]->X();
     if (dim == 1) return m_points[idx]->Y();
     return m_points[idx]->Z();
@@ -27,7 +27,7 @@ class PartonCloud {
     return false;
   }
 
-  Parton* get(size_t idx) const {
+  [[nodiscard]] Parton* get(size_t idx) const {
     return m_points[idx];
   }
 

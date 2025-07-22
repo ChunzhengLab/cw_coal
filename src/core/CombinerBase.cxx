@@ -97,3 +97,4 @@ std::vector<Hadron*> CombinerBase::Afterburner(const std::vector<Parton*>& parto
 
   return result;
 }
+

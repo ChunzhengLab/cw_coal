@@ -50,6 +50,9 @@ class Particle : public TObject {
   double Z() const {
     return fZ;
   }
+  double T() const {
+    return fT;
+  }
 
   void GetPosition(double* xyz) const {
     xyz[0] = fX;
@@ -80,6 +83,10 @@ class Particle : public TObject {
     return fMass;
   }
 
+  void SetFreezeOutTime(double t) {
+    fT = t;
+  }
+
   void SetPID(int pid) {
     fPID = pid;
   }
@@ -106,6 +113,7 @@ class Particle : public TObject {
   double fPx{0}, fPy{0}, fPz{0};
   double fX{0}, fY{0}, fZ{0};
   double fMass{0};
+  double fT{0};
   double fBaryonNumber{0.0};
   unsigned int fUniqueID{0};    // Changed to unsigned int
   static unsigned int sNextID;  // Added static member
@@ -124,22 +132,38 @@ class Parton : public Particle {
       : Particle(x, y, z, px, py, pz, baryonNumber) {
   }
 
-  void MarkUsed() {
-    fUsed = true;
-  }
-  bool IsUsed() const {
-    return fUsed;
-  }
+  void MarkFreezeOut() { fFreezeOut = true; }
+  bool IsFreezeOut() const { return fFreezeOut; }
+  void MarkUsed() { fUsed = true; }
+  bool IsUsed() const { return fUsed; }
 
   // 可选：从模型或hist生成随机Parton
   static Parton* Random(TRandom3* rng = nullptr);  // Modified declaration
   static Parton* RandomFromHists(const char* filename,
                                  TRandom3* rng = nullptr);  // Modified declaration
 
+  void MoveOn(const float deltaTime) {
+      double mass = GetMassFromPDG(); // 需要有一个质量
+      double energy = std::hypot(Px(), std::hypot(Py(), Pz()), mass); // E = sqrt(p² + m²)
+
+      // 速度 v = p / E
+      double vx = Px() / energy;
+      double vy = Py() / energy;
+      double vz = Pz() / energy;
+
+      // 更新位置: x_new = x_old + v * Δt
+      SetPosition(
+          X() + vx * deltaTime,
+          Y() + vy * deltaTime,
+          Z() + vz * deltaTime
+      );
+  }
+
  private:
   bool fUsed{false};
+  bool fFreezeOut{false};
 
-  ClassDef(Parton, 2)
+  ClassDef(Parton, 3)
 };
 
 // ================= Hadron ==================

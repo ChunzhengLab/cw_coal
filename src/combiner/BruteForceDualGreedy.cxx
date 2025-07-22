@@ -3,7 +3,7 @@
 
 #include "Combiners.h"
 
-std::vector<Hadron*> BruteForceDualGreedy::Combine(const std::vector<Parton*>& partons) {
+auto BruteForceDualGreedy::Combine(const std::vector<Parton*>& partons) -> std::vector<Hadron*> {
   std::vector<Hadron*> hadrons;
 
   for (auto* a : partons) {
@@ -58,7 +58,7 @@ std::vector<Hadron*> BruteForceDualGreedy::Combine(const std::vector<Parton*>& p
       double E_sum = E1 + E2;
       double invMass = std::sqrt(std::max(0.0, E_sum * E_sum - (px * px + py * py + pz * pz)));
 
-      Hadron* h = new Hadron(x, y, z, px, py, pz, 0, closestOppDist);
+      auto h = new Hadron(x, y, z, px, py, pz, 0, closestOppDist);
       h->SetMass(invMass);
       h->AddConstituentID(a->UniqueID());
       h->AddConstituentID(closestOpp->UniqueID());
@@ -90,7 +90,7 @@ std::vector<Hadron*> BruteForceDualGreedy::Combine(const std::vector<Parton*>& p
       double E_sum = E1 + E2 + E3;
       double invMass = std::sqrt(std::max(0.0, E_sum * E_sum - (px * px + py * py + pz * pz)));
 
-      Hadron* h = new Hadron(x, y, z, px, py, pz, baryonNumber, formationDist);
+      auto h = new Hadron(x, y, z, px, py, pz, baryonNumber, formationDist);
       h->SetMass(invMass);
       h->AddConstituentID(a->UniqueID());
       h->AddConstituentID(closestSame1->UniqueID());

@@ -12,6 +12,7 @@
 #include "ana/AnalyzerQA.h"
 #include "core/Event.h"
 #include "core/PIDAssigner.h"
+#include "core/TimeFrameManager.h"
 #include "io/EventRandomGen.h"
 #include "io/EventReaderAMPT.h"
 #include "io/EventWriter.h"
@@ -31,7 +32,10 @@ static void PrintUsage() {
             << "  -s, --savedir <dir>      Output directory for all files (default: current working directory)\n"
             << "  -r, --baryon-preference <R>  Baryon preference factor (default: 1.0)\n"
             << "  -F, --shuffle-fraction <F>   Shuffle fraction of parton positions (0.0–1.0, default: 0.0)\n"
-            << "  -T, --toymode            Use Toy event generation mode (uniform disk + simple pT)\n";
+            << "  -T, --toymode            Use Toy event generation mode (uniform disk + simple pT)\n"
+            << "  --timeframes <N>         Number of time frames for evolution (default: 10)\n"
+            << "  --timeframe-strategy <S> Time frame strategy: FixedTimeStep, EqualTime, Adaptive (default: EqualTime)\n"
+            << "  --fixed-timestep <dt>    Fixed time step in fm/c (only for FixedTimeStep strategy, default: 1.0)\n";
 }
 
 int main(int argc, char** argv) {
@@ -50,6 +54,11 @@ int main(int argc, char** argv) {
 
   // Shuffle feature
   double shuffleFraction = -1;
+  
+  // Timeframe features
+  int timeFrames = 10;
+  std::string timeFrameStrategy = "EqualTime";
+  double fixedTimeStep = 1.0;
 
   const struct option longOpts[] = {{"help", no_argument, nullptr, 'h'},
                                     {"data-input", required_argument, nullptr, 'i'},
@@ -62,6 +71,9 @@ int main(int argc, char** argv) {
                                     {"baryon-preference", required_argument, nullptr, 'r'},
                                     {"shuffle-fraction", required_argument, nullptr, 'F'},
                                     {"toymode", no_argument, nullptr, 'T'},
+                                    {"timeframes", required_argument, nullptr, 1000},
+                                    {"timeframe-strategy", required_argument, nullptr, 1001},
+                                    {"fixed-timestep", required_argument, nullptr, 1002},
                                     {nullptr, 0, nullptr, 0}};
 
   int opt;
@@ -102,6 +114,15 @@ int main(int argc, char** argv) {
       case 'T':
         toyMode = true;
         break;
+      case 1000:
+        timeFrames = std::stoi(optarg);
+        break;
+      case 1001:
+        timeFrameStrategy = optarg;
+        break;
+      case 1002:
+        fixedTimeStep = std::stod(optarg);
+        break;
       default:
         PrintUsage();
         return 1;
@@ -118,10 +139,33 @@ int main(int argc, char** argv) {
     combiner = std::make_unique<BruteForceGlobal>(baryonPreference);
   } else if (algorithm == "BruteForceGreedy") {
     combiner = std::make_unique<BruteForceGreedy>(baryonPreference);
-  } else {
+  } else if (algorithm == "BruteForceDualGreedy") {
+    combiner = std::make_unique<BruteForceDualGreedy>(baryonPreference);
+  } else if (algorithm == "KDTreeDualGreedy") {
+    combiner = std::make_unique<KDTreeDualGreedy>(baryonPreference);
+  } 
+  else {
     std::cerr << "Unknown algorithm: " << algorithm << std::endl;
     return 1;
   }
+
+  // Configure timeframe manager
+  combiner->SetTimeFrameCount(timeFrames);
+  combiner->SetFixedTimeStep(fixedTimeStep);
+  
+  // Set timeframe strategy
+  TimeFrameManager::Strategy strategy;
+  if (timeFrameStrategy == "FixedTimeStep") {
+    strategy = TimeFrameManager::Strategy::kFixedTimeStep;
+  } else if (timeFrameStrategy == "EqualTime") {
+    strategy = TimeFrameManager::Strategy::kEqualTime;
+  } else if (timeFrameStrategy == "Adaptive") {
+    strategy = TimeFrameManager::Strategy::kAdaptive;
+  } else {
+    std::cerr << "Unknown timeframe strategy: " << timeFrameStrategy << std::endl;
+    return 1;
+  }
+  combiner->SetTimeFrameStrategy(strategy);
 
   // Initialize writer and analyzers
   std::unique_ptr<EventWriter> writer;
@@ -168,6 +212,10 @@ int main(int argc, char** argv) {
   std::cout << ">>>Baryon preference factor: " << baryonPreference << std::endl;
   std::cout << ">>>Save directory: " << saveDir << std::endl;
   std::cout << ">>>Algorithm: " << algorithm << std::endl;
+  std::cout << ">>>Time frames: " << timeFrames << " (" << timeFrameStrategy << ")" << std::endl;
+  if (timeFrameStrategy == "FixedTimeStep") {
+    std::cout << ">>>Fixed time step: " << fixedTimeStep << " fm/c" << std::endl;
+  }
   if (writer) { std::cout << ">>>Hadrons output file: " << saveDir << "/" << dataOutput << std::endl; }
   if (shuffleFraction >= 0.0) {
     std::cout << ">>>Shuffle fraction of parton positions: " << shuffleFraction << std::endl;

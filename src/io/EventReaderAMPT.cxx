@@ -19,6 +19,7 @@ void EventReaderAMPT::SetupBranches() {
   fTree->SetBranchStatus("X", 1);
   fTree->SetBranchStatus("Y", 1);
   fTree->SetBranchStatus("Z", 1);
+  fTree->SetBranchStatus("Time", 1);
 
   // Bind branches to our buffers
   fTree->SetBranchAddress("Event", fEventBuf.data());
@@ -29,6 +30,7 @@ void EventReaderAMPT::SetupBranches() {
   fTree->SetBranchAddress("X", fX.data());
   fTree->SetBranchAddress("Y", fY.data());
   fTree->SetBranchAddress("Z", fZ.data());
+  fTree->SetBranchAddress("Time", fZ.data());
 }
 
 EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
@@ -40,7 +42,7 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
     TChain* chain = nullptr;
     std::ifstream inputStream(fn);
     if (!inputStream) {
-      std::cerr << "[ERROR] Cannot open list file: " << fn << std::endl;
+      std::cerr << "[ERROR] Cannot open list file: " << fn << "\n";
       return;
     }
 
@@ -51,12 +53,12 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
 
       TFile testFile(filePath.c_str(), "READ");
       if (!testFile.IsOpen() || testFile.IsZombie()) {
-        std::cerr << "[WARN] Skipping unreadable or zombie file: " << filePath << std::endl;
+        std::cerr << "[WARN] Skipping unreadable or zombie file: " << filePath << "\n";
         continue;
       }
 
       if (testFile.GetNkeys() == 0) {
-        std::cerr << "[WARN] Skipping empty file (no keys): " << filePath << std::endl;
+        std::cerr << "[WARN] Skipping empty file (no keys): " << filePath << "\n";
         testFile.Close();
         continue;
       }
@@ -67,7 +69,7 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
       } else if ((testTree = static_cast<TTree*>(testFile.Get("AMPT_I")))) {
         treeName = "AMPT_I";
       } else {
-        std::cerr << "[WARN] No AMPT/AMPT_I tree found in: " << filePath << std::endl;
+        std::cerr << "[WARN] No AMPT/AMPT_I tree found in: " << filePath << "\n";
         testFile.Close();
         continue;
       }
@@ -75,12 +77,12 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
       testFile.Close();
 
       if (!chain) { chain = new TChain(treeName.c_str()); }
-      std::cout << "[INFO] Adding file (" << treeName << "): " << filePath << std::endl;
+      std::cout << "[INFO] Adding file (" << treeName << "): " << filePath << "\n";
       chain->Add(filePath.c_str());
     }
 
     if (!chain || chain->GetNtrees() == 0) {
-      std::cerr << "[ERROR] No valid ROOT files found in list." << std::endl;
+      std::cerr << "[ERROR] No valid ROOT files found in list." << "\n";
       return;
     }
 
@@ -89,12 +91,12 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
     // 单个文件模式
     fFile = TFile::Open(fn.c_str(), "READ");
     if (!fFile || fFile->IsZombie()) {
-      std::cerr << "[ERROR] Cannot open ROOT file: " << fn << std::endl;
+      std::cerr << "[ERROR] Cannot open ROOT file: " << fn << "\n";
       return;
     }
 
     if (fFile->GetNkeys() == 0) {
-      std::cerr << "[ERROR] ROOT file is empty (no keys): " << fn << std::endl;
+      std::cerr << "[ERROR] ROOT file is empty (no keys): " << fn << "\n";
       return;
     }
 
@@ -103,14 +105,14 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
     } else if ((fTree = static_cast<TTree*>(fFile->Get("AMPT_I")))) {
       // OK
     } else {
-      std::cerr << "[ERROR] No AMPT/AMPT_I tree found in: " << fn << std::endl;
+      std::cerr << "[ERROR] No AMPT/AMPT_I tree found in: " << fn << "\n";
       fTree = nullptr;
       return;
     }
   }
 
   if (!fTree) {
-    std::cerr << "[ERROR] No valid tree loaded." << std::endl;
+    std::cerr << "[ERROR] No valid tree loaded." << "\n";
     return;
   }
 
@@ -124,9 +126,10 @@ EventReaderAMPT::EventReaderAMPT(const std::string& fn) {
   fX.resize(maxN);
   fY.resize(maxN);
   fZ.resize(maxN);
+  fT.resize(maxN);
 
   SetupBranches();
-  std::cout << "[INFO] EventReaderAMPT initialized with " << fNentries << " entries." << std::endl;
+  std::cout << "[INFO] EventReaderAMPT initialized with " << fNentries << " entries." << "\n";
 }
 
 bool EventReaderAMPT::NextEvent(Event& out) {
@@ -143,6 +146,7 @@ bool EventReaderAMPT::NextEvent(Event& out) {
     double bn = (pdg < 0 ? -1.0 / 3.0 : 1.0 / 3.0);
     auto p = new Parton(fX[i], fY[i], fZ[i], fPx[i], fPy[i], fPz[i], bn);
     p->SetPID(pdg);
+    p->SetFreezeOutTime(fT[i]);
     out.AddParton(p);
   }
   return true;

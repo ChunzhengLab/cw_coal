@@ -35,8 +35,8 @@ class PIDAssigner {
       quarkFlavorCodes.reserve(constituentUIDs.size());
       for (auto uid : constituentUIDs) { quarkFlavorCodes.push_back(uidToPartonMap[uid]->GetPID()); }
       // diagonal light mesons are size==2 & q0==-q1 & |q|<=2
-      if (!(quarkFlavorCodes.size() == 2 && quarkFlavorCodes[0] == -quarkFlavorCodes[1] &&
-            std::abs(quarkFlavorCodes[0]) <= 2)) {
+      if (quarkFlavorCodes.size() != 2 || quarkFlavorCodes[0] != -quarkFlavorCodes[1] ||
+          std::abs(quarkFlavorCodes[0]) > 2) {
         int pdg = PIDInference::InferPID(quarkFlavorCodes, hadronPtr->GetMass());
         hadronPtr->SetPID(pdg);
       }

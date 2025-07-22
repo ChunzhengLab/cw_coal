@@ -2,6 +2,8 @@
 #define ANALYZERCVE_H
 
 #include <string>
+#include <array>
+
 
 #include "core/Event.h"
 
@@ -43,7 +45,7 @@ class AnalyzerCVE {
   // antibaryon,            3,        4
   // meson,                           5
 
-  TH1D* hCdPhiP[6];  // -> position space
+  std::array<TH1D*, 6> hCdPhiP;  // -> position space
   TH1D* hCdPhiM[6];  // -> momentum space
 
   TH1D* hSdPhiP[6];  // -> position space

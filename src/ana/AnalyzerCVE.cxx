@@ -11,8 +11,8 @@
 #include "core/Particle.h"
 
 // Labels for the six charge combinations
-static const char* comboLabels[6] = {"Baryon-Baryon",         "Baryon-AntiBaryon", "Baryon-Meson",
-                                     "AntiBaryon-AntiBaryon", "AntiBaryon-Meson",  "Meson-Meson"};
+static const char* comboLabels[6] = {"Baryon_Baryon",         "Baryon_AntiBaryon", "Baryon_Meson",
+                                     "AntiBaryon_AntiBaryon", "AntiBaryon_Meson",  "Meson_Meson"};
 
 static constexpr int idxMap[3][3] = {{0, 1, 2}, {1, 3, 4}, {2, 4, 5}};
 
@@ -137,7 +137,7 @@ void AnalyzerCVE::AnalyzePair(const Hadron* h1, const Hadron* h2, int nTrk) {
   double pt2 = std::hypot(h2->Px(), h2->Py());
   double eta1 = std::asinh(h1->Pz() / pt1);
   double eta2 = std::asinh(h2->Pz() / pt2);
-  if (pt1 < 0.2 || pt1 > 3.0 || pt2 < 0.2 || pt2 > 3.0 || eta1 < -0.8 || eta1 > 0.8 || eta2 < -0.8 || eta2 > 0.8)
+  if (pt1 < 0.2 || pt1 > 8.0 || pt2 < 0.2 || pt2 > 8.0 || eta1 < -0.8 || eta1 > 0.8 || eta2 < -0.8 || eta2 > 0.8)
     return;
 
   // position-space angles
