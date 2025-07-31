@@ -55,7 +55,7 @@ class PartonKDTree {
     nanoflann::KNNResultSet<double> resultSet(maxResults);
     resultSet.init(ret_index.data(), out_dist_sqr.data());
 
-    nanoflann::SearchParameters params;
+    nanoflann::SearchParams params;
     params.sorted = true;
     m_index.findNeighbors(resultSet, queryPoint, params);
 
@@ -81,7 +81,7 @@ class PartonKDTree {
     nanoflann::KNNResultSet<double> resultSet(10);
     resultSet.init(ret_index.data(), out_dist_sqr.data());
 
-    nanoflann::SearchParameters params;
+    nanoflann::SearchParams params;
     params.sorted = true;
     m_index.findNeighbors(resultSet, queryPoint, params);
 
@@ -102,7 +102,7 @@ class PartonKDTree {
     nanoflann::KNNResultSet<double> resultSet(k * 5);
     resultSet.init(ret_index.data(), out_dist_sqr.data());
 
-    nanoflann::SearchParameters params;
+    nanoflann::SearchParams params;
     params.sorted = true;
     m_index.findNeighbors(resultSet, queryPoint, params);
 
